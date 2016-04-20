@@ -23,7 +23,8 @@ It's roughly similar to the one Brandon Heller did for NOX.
 
 from pox.core import core
 import pox.openflow.libopenflow_01 as of
-
+import time
+import pox.lib.packet as pkt
 log = core.getLogger()
 
 
@@ -61,80 +62,79 @@ class Tutorial (object):
 
     # Send message to switch
     self.connection.send(msg)
-
-
-  def act_like_hub (self, packet, packet_in):
-    """
-    Implement hub-like behavior -- send all packets to all ports besides
-    the input port.
-    """
-
-    # We want to output to all ports -- we do that using the special
-    # OFPP_ALL port as the output port.  (We could have also used
-    # OFPP_FLOOD.)
-    self.resend_packet(packet_in, of.OFPP_ALL)
-
-    # Note that if we didn't get a valid buffer_id, a slightly better
-    # implementation would check that we got the full data before
-    # sending it (len(packet_in.data) should be == packet_in.total_len)).
   
-  def learning_pox(self, packet, packet_in):
-     
-    # Update mac-to-port entry, if it does not
-    # exist insert it
-    log.debug("Received packet from {} to {} from port {}".format( str(packet.src), str(packet.dst), str(packet_in.in_port)))
-    self.mac_to_port[str(packet.src)] = packet_in.in_port
+  def install_rule( self, priority, src_port, src_mac, dst_mac):
+    log.debug("Switch-{}: Installing rule src:{} , src_port {}, dst {} -> dst_port {}".
+              format( self.connection.dpid, src_mac, src_port, dst_mac, self.mac_to_port[str(dst_mac)]))
     
-    if str(packet.dst) in self.mac_to_port:
+    # TODO: Maybe do a more fine-grained match ? 
+    msg = of.ofp_flow_mod()
+    msg.priority = priority
+    msg.match = of.ofp_match( in_port = src_port,
+			      dl_src  = src_mac,
+                              dl_dst  = dst_mac)
+    msg.actions.append( of.ofp_action_output( port = self.mac_to_port[str(dst_mac)]))
+    self.connection.send(msg)
+        
+  def learning_microflow_controller(self, packet, packet_in):
+          
+    # Update mac-to-port entry, if it does not
+    # exist, insert it
+    self.mac_to_port[str(packet.src)] = packet_in.in_port
+  
+    # if dst is multicast flood it and return from the method
+    if packet.dst.is_multicast:
+        log.debug("Switch-{}: Type: {} . host {} --> FLOOD --> host {}".
+                 format( str(self.connection.dpid), pkt.ETHERNET.ethernet.getNameForType(packet.type),str(packet.src), str(packet.dst) ))
+        self.resend_packet(packet_in, of.OFPP_ALL)
+    elif str(packet.dst) in self.mac_to_port:
         out_port = self.mac_to_port[str(packet.dst)]
 
-        log.debug("Forwarding packet to port {}".format(str(out_port)))
+        log.debug("Switch-{}: Type: {} . host {} --> port {} --> host {}".
+	          format( str(self.connection.dpid),  pkt.ETHERNET.ethernet.getNameForType(packet.type), str(packet.src), str(out_port), str(packet.dst)))
         self.resend_packet(packet_in, out_port)
+        
+        # additionally, install a rule per flow (src, src-port, dst, dst-port)
+        self.install_rule( 1, packet_in.in_port, packet.src, packet.dst)
+              
     else:
+        log.debug("Switch-{}: Type: {} . host {} --> FLOOD --> host {}".
+	          format( str(self.connection.dpid), pkt.ETHERNET.ethernet.getNameForType(packet.type),str(packet.src), str(packet.dst) ))
+
         self.resend_packet(packet_in, of.OFPP_ALL)
 
     return
 
-  def act_like_switch (self, packet, packet_in):
-    """
-    Implement switch-like behavior.
-    """
+  def learning_controller(self, packet, packet_in):
+          
+    # Update mac-to-port entry, if it does not
+    # exist, insert it
+    self.mac_to_port[str(packet.src)] = packet_in.in_port
+ 
+    # if dst is multicast flood it and return from the method
+    if packet.dst.is_multicast:
+       log.debug("Switch-{}: Type: {} . host {} --> FLOOD --> host {}".
+                 format( str(self.connection.dpid), pkt.ETHERNET.ethernet.getNameForType(packet.type),str(packet.src), str(packet.dst) ))
+       self.resend_packet(packet_in, of.OFPP_ALL)
+    elif str(packet.dst) in self.mac_to_port:
+        out_port = self.mac_to_port[str(packet.dst)]
 
-    """ # DELETE THIS LINE TO START WORKING ON THIS (AND THE ONE BELOW!) #
-
-    # Here's some psuedocode to start you off implementing a learning
-    # switch.  You'll need to rewrite it as real Python code.
-
-    # Learn the port for the source MAC
-    self.mac_to_port ... <add or update entry>
-
-    if the port associated with the destination MAC of the packet is known:
-      # Send packet out the associated port
-      self.resend_packet(packet_in, ...)
-
-      # Once you have the above working, try pushing a flow entry
-      # instead of resending the packet (comment out the above and
-      # uncomment and complete the below.)
-
-      log.debug("Installing flow...")
-      # Maybe the log statement should have source/destination/port?
-
-      #msg = of.ofp_flow_mod()
-      #
-      ## Set fields to match received packet
-      #msg.match = of.ofp_match.from_packet(packet)
-      #
-      #< Set other fields of flow_mod (timeouts? buffer_id?) >
-      #
-      #< Add an output action, and send -- similar to resend_packet() >
-
+        log.debug("Switch-{}: Type: {} . host {} --> port {} --> host {}".
+	          format( str(self.connection.dpid),  pkt.ETHERNET.ethernet.getNameForType(packet.type), str(packet.src), str(out_port), str(packet.dst)))
+        self.resend_packet(packet_in, out_port)
     else:
-      # Flood the packet out everything but the input port
-      # This part looks familiar, right?
-      self.resend_packet(packet_in, of.OFPP_ALL)
+        log.debug("Switch-{}: Type: {} . host {} --> FLOOD --> host {}".
+	          format( str(self.connection.dpid), pkt.ETHERNET.ethernet.getNameForType(packet.type),str(packet.src), str(packet.dst) ))
 
-    """ # DELETE THIS LINE TO START WORKING ON THIS #
+        self.resend_packet(packet_in, of.OFPP_ALL)
 
+    return
+
+  def learning_hub(self, packet, packet_in):
+     
+     # send packet to all switch ports except the one 
+     # that received it   
+     self.resend_packet(packet_in, of.OFPP_ALL)
 
   def _handle_PacketIn (self, event):
     """
@@ -151,9 +151,9 @@ class Tutorial (object):
     # Comment out the following line and uncomment the one after
     # when starting the exercise.
 
-    self.learning_pox(packet, packet_in)
-
-
+    #self.learning_hub(packet, packet_in)
+    #self.learning_controller(packet, packet_in)
+    self.learning_microflow_controller(packet, packet_in)
 
 def launch ():
   """
