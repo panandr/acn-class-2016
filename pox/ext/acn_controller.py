@@ -25,9 +25,9 @@ from pox.core import core
 import pox.openflow.libopenflow_01 as of
 import time
 import pox.lib.packet as pkt
+import hashlib
+
 log = core.getLogger()
-
-
 
 class Tutorial (object):
   """
@@ -45,7 +45,13 @@ class Tutorial (object):
     # Use this table to keep track of which ethernet address is on
     # which switch port (keys are MACs, values are ports).
     self.mac_to_port = {}
+    
+    # Structure to keep flooded packets so as not to re-flood them
+    # if the topology has loops
+    self.flooded_packets = {}
 
+    # timestamp for cleaning flooded packets
+    self.flood_timestamp = time.time()
 
   def resend_packet (self, packet_in, out_port):
     """
@@ -75,9 +81,30 @@ class Tutorial (object):
                               dl_dst  = dst_mac)
     msg.actions.append( of.ofp_action_output( port = self.mac_to_port[str(dst_mac)]))
     self.connection.send(msg)
+
+  
+  def flood(self, packet, packet_in):
+    
+    m = hashlib.md5()
+    m.update(str(packet.payload))
+    
+    if m.digest() in self.flooded_packets:
+      return
+    else:
+      self.flooded_packets[ m.digest()] = 0
+      self.resend_packet(packet_in, of.OFPP_ALL)
+  
+  def policy_controller(self, packet, packet_in):
+    return      
         
   def learning_microflow_controller(self, packet, packet_in):
           
+    # clear flooded packets every 1 sec
+    if (time.time() - self.flood_timestamp > 1):
+      log.debug("Switch-{}: Clearing flooding table!".format(str(self.connection.dpid)))
+      self.flood_timestamp = time.time()
+      self.flooded_packets = {}
+
     # Update mac-to-port entry, if it does not
     # exist, insert it
     self.mac_to_port[str(packet.src)] = packet_in.in_port
@@ -86,7 +113,9 @@ class Tutorial (object):
     if packet.dst.is_multicast:
         log.debug("Switch-{}: Type: {} . host {} --> FLOOD --> host {}".
                  format( str(self.connection.dpid), pkt.ETHERNET.ethernet.getNameForType(packet.type),str(packet.src), str(packet.dst) ))
-        self.resend_packet(packet_in, of.OFPP_ALL)
+        
+	self.flood(packet, packet_in)
+
     elif str(packet.dst) in self.mac_to_port:
         out_port = self.mac_to_port[str(packet.dst)]
 
@@ -100,8 +129,9 @@ class Tutorial (object):
     else:
         log.debug("Switch-{}: Type: {} . host {} --> FLOOD --> host {}".
 	          format( str(self.connection.dpid), pkt.ETHERNET.ethernet.getNameForType(packet.type),str(packet.src), str(packet.dst) ))
-
-        self.resend_packet(packet_in, of.OFPP_ALL)
+        
+        # flood the packet to all ports
+        self.flood(packet, packet_in) 
 
     return
 
