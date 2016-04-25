@@ -26,6 +26,7 @@ import pox.openflow.libopenflow_01 as of
 import time
 import pox.lib.packet as pkt
 import hashlib
+import pox.openflow.spanning_tree
 
 log = core.getLogger()
 
@@ -45,14 +46,7 @@ class Tutorial (object):
     # Use this table to keep track of which ethernet address is on
     # which switch port (keys are MACs, values are ports).
     self.mac_to_port = {}
-    
-    # Structure to keep flooded packets so as not to re-flood them
-    # if the topology has loops
-    self.flooded_packets = {}
-
-    # timestamp for cleaning flooded packets
-    self.flood_timestamp = time.time()
-
+     
   def resend_packet (self, packet_in, out_port):
     """
     Instructs the switch to resend a packet that it had sent to us.
@@ -85,26 +79,13 @@ class Tutorial (object):
   
   def flood(self, packet, packet_in):
     
-    m = hashlib.md5()
-    m.update(str(packet.payload))
-    
-    if m.digest() in self.flooded_packets:
-      return
-    else:
-      self.flooded_packets[ m.digest()] = 0
-      self.resend_packet(packet_in, of.OFPP_ALL)
+    self.resend_packet(packet_in, of.OFPP_FLOOD)
   
   def policy_controller(self, packet, packet_in):
-    return      
-        
-  def learning_microflow_controller(self, packet, packet_in):
-          
-    # clear flooded packets every 1 sec
-    if (time.time() - self.flood_timestamp > 1):
-      log.debug("Switch-{}: Clearing flooding table!".format(str(self.connection.dpid)))
-      self.flood_timestamp = time.time()
-      self.flooded_packets = {}
+    return
 
+  def  learning_microflow_controller(self, packet, packet_in):
+    
     # Update mac-to-port entry, if it does not
     # exist, insert it
     self.mac_to_port[str(packet.src)] = packet_in.in_port
@@ -122,7 +103,7 @@ class Tutorial (object):
         log.debug("Switch-{}: Type: {} . host {} --> port {} --> host {}".
 	          format( str(self.connection.dpid),  pkt.ETHERNET.ethernet.getNameForType(packet.type), str(packet.src), str(out_port), str(packet.dst)))
         self.resend_packet(packet_in, out_port)
-        
+      
         # additionally, install a rule per flow (src, src-port, dst, dst-port)
         self.install_rule( 1, packet_in.in_port, packet.src, packet.dst)
               
@@ -145,7 +126,7 @@ class Tutorial (object):
     if packet.dst.is_multicast:
        log.debug("Switch-{}: Type: {} . host {} --> FLOOD --> host {}".
                  format( str(self.connection.dpid), pkt.ETHERNET.ethernet.getNameForType(packet.type),str(packet.src), str(packet.dst) ))
-       self.resend_packet(packet_in, of.OFPP_ALL)
+       self.resend_packet(packet_in, of.OFPP_FLOOD)
     elif str(packet.dst) in self.mac_to_port:
         out_port = self.mac_to_port[str(packet.dst)]
 
@@ -156,7 +137,7 @@ class Tutorial (object):
         log.debug("Switch-{}: Type: {} . host {} --> FLOOD --> host {}".
 	          format( str(self.connection.dpid), pkt.ETHERNET.ethernet.getNameForType(packet.type),str(packet.src), str(packet.dst) ))
 
-        self.resend_packet(packet_in, of.OFPP_ALL)
+        self.resend_packet(packet_in, of.OFPP_FLOOD)
 
     return
 
@@ -164,7 +145,10 @@ class Tutorial (object):
      
      # send packet to all switch ports except the one 
      # that received it   
-     self.resend_packet(packet_in, of.OFPP_ALL)
+    log.debug("Switch-{}: Type: {} . host {} --> FLOOD --> host {}".
+	          format( str(self.connection.dpid), pkt.ETHERNET.ethernet.getNameForType(packet.type),str(packet.src), str(packet.dst) ))
+
+    self.flood(packet, packet_in);
 
   def _handle_PacketIn (self, event):
     """
@@ -182,14 +166,27 @@ class Tutorial (object):
     # when starting the exercise.
 
     #self.learning_hub(packet, packet_in)
-    #self.learning_controller(packet, packet_in)
-    self.learning_microflow_controller(packet, packet_in)
+    self.learning_controller(packet, packet_in)
+    #self.learning_microflow_controller(packet, packet_in)
 
 def launch ():
   """
   Starts the component
   """
+  import pox.log.color
+  pox.log.color.launch()
+  import pox.log
+  pox.log.launch(format="[@@@bold@@@level%(name)-22s@@@reset] " +
+                        "@@@bold%(message)s@@@normal")
+  from pox.core import core
+  import pox.openflow.discovery
+  pox.openflow.discovery.launch()
+ 
+  pox.openflow.spanning_tree.launch()
+  
   def start_switch (event):
     log.debug("Controlling %s" % (event.connection,))
     Tutorial(event.connection)
   core.openflow.addListenerByName("ConnectionUp", start_switch)
+  
+
