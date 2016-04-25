@@ -12,15 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-This component is for use with the OpenFlow tutorial.
-
-It acts as a simple hub, but can be modified to act like an L2
-learning switch.
-
-It's roughly similar to the one Brandon Heller did for NOX.
-"""
-
 from pox.core import core
 import pox.openflow.libopenflow_01 as of
 from pox.lib.addresses import IPAddr,EthAddr,parse_cidr
@@ -34,40 +25,58 @@ import pox.host_tracker.host_tracker
 import pox.log.color
 import pox.log
 
+H1 = "10.0.0.1"
+H2 = "10.0.0.2"
+H3 = "10.0.0.3"
+H4 = "10.0.0.4"
+
 log = core.getLogger()
 
 class acn_controller(object):
   
   def __init__(self):
-    log.info("Started")
+    log.info("Initializing acn controller. Registering listeners for discovery module!")
 
     core.openflow_discovery.addListeners(self)
-    # core.host_tracker.addListeners(self)
 
     # dictionary that keeps connection/links/hosts/mac_to_port
-    # and possibly name of the switch
-    # per different datapatch-id
+    # and possibly name of the switch. This dictionary holds
+    # whatever state we need to store per switch
+    # switches are recognized with their datapath-ids
+    # dpid { hosts : {}, 
+    #        links : {},
+    #        connection : {},
+    #        mac_to_port: {}
+    #      }
     self.dpid_dict = {}
+
+    # hosts observed in the networks (IPs), for each
+    # host only keep the dpid which connects on and the 
+    # port of the dpit that connects on.
     self.hosts = {}
 
-  def track_host(self, packet, dpid):
+  def track_host(self, packet, packet_in, dpid):
     
-    if (packet.type == packet.ARP_TYPE) and (packet.payload.opcode == 1):
-      log.debug("Received arp request!")
+    if packet.type == packet.ARP_TYPE:
 
       src_ip = packet.payload.protosrc      
       if src_ip not in self.hosts:
-        self.hosts[src_ip] = ''
-        self.dpid_dict[dpid]["hosts"].append(src_ip)
-        
-    return
+        log.debug("DISCOVERED host with ip {} at switch with dpid {}".format(src_ip, dpid))
 
-  def install_ip_policy(self, connection, dpid, priority, src_ip, dst_ip, out_port, timeout):
+        self.hosts[src_ip] = dpid, packet_in.in_port   
+        self.dpid_dict[dpid]["hosts"].append(src_ip.toStr())
     
-    msg = of.of_flow_mod()
+    return
+     
+  
+  def install_ip_policy(self, connection, dpid, priority, in_port, src_ip, dst_ip, out_port, timeout):
+    
+    msg = of.ofp_flow_mod()
     msg.priority = priority
-    msg.match = of.ofp_match( nw_src = src_ip,
-                              nw_dst = dst_ip)
+    msg.match = of.ofp_match( dl_type=0x800,
+                              in_port = in_port,
+                              nw_src = src_ip.toStr(),
+                              nw_dst = dst_ip.toStr())
     msg.idle_timeout = timeout
     msg.actions.append( of.ofp_action_output( port = out_port))
 
@@ -112,13 +121,102 @@ class acn_controller(object):
 
   def policy_controller(self, dpid, packet, packet_in):
   
+    connection = self.dpid_dict[dpid]["connection"]
     mac_to_port = self.dpid_dict[dpid]["mac_to_port"]
 
-    # self.install_ip_policy( connection, 1, dpid, IPAddr("10.0.0.1"), IPAddr("10.0.0.4"), 
+    # if protocol is IP then implement policies 
+    # for all other traffic etc. ARP implement l2 switch
+    if packet.type == packet.IP_TYPE: 
+   
+      ip_packet = packet.payload
+      src_ip = ip_packet.srcip
+      dst_ip = ip_packet.dstip  
+      
+      hosts = self.dpid_dict[dpid]["hosts"]
+      links = self.dpid_dict[dpid]["links"]
 
-    connection = self.dpid_dict[dpid]["connection"]
+      log.info("Received IP packet from {} to {}, implementing policy!".format(src_ip, dst_ip))
+     
+      # implementing H1 H4 s3, H2 H4 s3 
+      if (H1 == src_ip.toStr() or H2 == src_ip.toStr()) and H4 == dst_ip:
+
+        log.info("Implement policy from {} to {}. Should pass from upper switch".format(src_ip, dst_ip)) 
+        
+        # Can only infer switch identity only for hosts connected to us :(
+        # if we are S1 install rule to send to S3 (switch with no hosts)
+        if H1 in hosts or H2 in hosts:
+ 	  log.info("In S1!")
+            
+          # should pass from S3, find link which dpid has no hosts :) 
+          for link in links:
+            next_dpid = link.dpid2
+            own_port  = link.port1
+            # check if link dictionary is empty for this dpid, if yes it is the right switch (S3)
+            if not self.dpid_dict[next_dpid]["hosts"]:
+              break
+
+          log.info("Installing flow at S1 for S3!")           
+          self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, 100)
+	  self.resend_packet( connection, packet_in, own_port)
+
+        # if we are S2 install rule to send directly to H4  
+        elif H3 in hosts or H4 in hosts:
+          log.info("In S2!")
+          
+          # retrieve host data from hosts dictionary  
+          dpid, own_port = self.hosts[dst_ip]
+
+          log.info("Installing rule and forwarding data to host!") 
+          self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, 100)
+	  self.resend_packet( connection, packet_in, own_port)
+
+        # if we are S3 install rule to send to S2 (switch with hosts H3,H4)
+        else:
+          log.info("In S3!")
+
+          for link in links:
+            next_dpid = link.dpid2
+            own_port  = link.port1
+            # check if link dictionary is empty for this dpid, if yes it is the right switch (S3)
+            if H3 in self.dpid_dict[next_dpid]["hosts"] or H4 in self.dpid_dict[next_dpid]["hosts"]:
+              break
+
+          log.info("Installing flow for host!")           
+          self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, 100)
+	  self.resend_packet( connection, packet_in, own_port)
+           
+      else:
+        if H1 in hosts or H2 in hosts:
+          log.info("In S1")
+        elif H3 in hosts or H4 in hosts:
+          log.info("In S2")
+        else:
+          log.info("In S3") 
+
+        # if dst_ip is connected to switch forward to host and install rule
+        if dst_ip.toStr() in hosts: 
+           dpid, own_port = self.hosts[dst_ip]
+           
+           log.info("Installing rule and forwarding data to host!") 
+           self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, 100)
+ 	   self.resend_packet( connection, packet_in, own_port)
+	else:
+          
+          # find dpid which host is connected to, from links to us
+          for link in links:
+            next_dpid = link.dpid2
+            own_port  = link.port1
+           
+            # check in dpid connected to us if dst_ip is conencted to it, if yes install rule and forward
+            if dst_ip.toStr() in self.dpid_dict[next_dpid]["hosts"]:
+              break
+ 
+          log.info("Installing flow for host!")           
+          self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, 100)
+	  self.resend_packet( connection, packet_in, own_port)
+    else:
+      self.learning_microflow_controller(dpid, packet, packet_in)
     
-
   def  learning_microflow_controller(self, dpid, packet, packet_in):
     
     connection = self.dpid_dict[dpid]["connection"]
@@ -214,20 +312,27 @@ class acn_controller(object):
     dpid = event.dpid
     log.debug("PacketIn message from Switch with dpid = {}".format(dpid))
   
-    self.track_host(packet, dpid)
+    self.track_host(packet, packet_in, dpid)
 
     # self.simple_hub(dpid , packet, packet_in) 
     # self.learning_controller(dpid, packet, packet_in) 
-    self.learning_microflow_controller(dpid, packet, packet_in)
-    # self.policy_controller(dpid, packet, packet_in)
+    # self.learning_microflow_controller(dpid, packet, packet_in)
+    self.policy_controller(dpid, packet, packet_in)
 
   def _handle_LinkEvent (self, event):
-    return  
-    # link = event.link
-    # dpid_source = link.dpid1
-    # dpid_dest = link.dpid2
     
-    # log.debug("LinkUpdate for Link {}->{}".format(dpid_source, dpid_dest))
+    link = event.link
+
+    dpid_source = link.dpid1
+    dpid_dest = link.dpid2
+    port_source = link.port1
+    port_dest = link.port2
+
+    if event.added:
+      log.debug("Link added for switches S-{}:port-{} --> S-{}:port-{}".format(dpid_source, port_source, dpid_dest, port_dest))
+      self.dpid_dict[dpid_source]["links"].append(link)    
+    else:
+      log.debug("Link removed for switches S-{}:port-{} --> S-{}:port-{}".format(dpid_source, port_source, dpid_dest, port_dest))
 
   def _handle_HostEvent (self, event):
     return;   
@@ -244,7 +349,6 @@ def launch ():
 
   pox.openflow.discovery.launch() 
   pox.openflow.spanning_tree.launch()
-  pox.host_tracker.launch()
 
   acn = acn_controller()
 
