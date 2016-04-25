@@ -102,6 +102,7 @@ class Tutorial (object):
 
         log.debug("Switch-{}: Type: {} . host {} --> port {} --> host {}".
 	          format( str(self.connection.dpid),  pkt.ETHERNET.ethernet.getNameForType(packet.type), str(packet.src), str(out_port), str(packet.dst)))
+        
         self.resend_packet(packet_in, out_port)
       
         # additionally, install a rule per flow (src, src-port, dst, dst-port)
@@ -111,7 +112,8 @@ class Tutorial (object):
         log.debug("Switch-{}: Type: {} . host {} --> FLOOD --> host {}".
 	          format( str(self.connection.dpid), pkt.ETHERNET.ethernet.getNameForType(packet.type),str(packet.src), str(packet.dst) ))
         
-        # flood the packet to all ports
+        # Destination mac of packet not in our dictionary
+	# flood the packet.
         self.flood(packet, packet_in) 
 
     return
@@ -126,18 +128,22 @@ class Tutorial (object):
     if packet.dst.is_multicast:
        log.debug("Switch-{}: Type: {} . host {} --> FLOOD --> host {}".
                  format( str(self.connection.dpid), pkt.ETHERNET.ethernet.getNameForType(packet.type),str(packet.src), str(packet.dst) ))
-       self.resend_packet(packet_in, of.OFPP_FLOOD)
+       
+       self.flood(packet, packet_in)
+
     elif str(packet.dst) in self.mac_to_port:
         out_port = self.mac_to_port[str(packet.dst)]
 
         log.debug("Switch-{}: Type: {} . host {} --> port {} --> host {}".
 	          format( str(self.connection.dpid),  pkt.ETHERNET.ethernet.getNameForType(packet.type), str(packet.src), str(out_port), str(packet.dst)))
+        
+        # send packet to specific port
         self.resend_packet(packet_in, out_port)
     else:
         log.debug("Switch-{}: Type: {} . host {} --> FLOOD --> host {}".
 	          format( str(self.connection.dpid), pkt.ETHERNET.ethernet.getNameForType(packet.type),str(packet.src), str(packet.dst) ))
 
-        self.resend_packet(packet_in, of.OFPP_FLOOD)
+        self.flood_packet(packet, packet_in)
 
     return
 
@@ -165,9 +171,10 @@ class Tutorial (object):
     # Comment out the following line and uncomment the one after
     # when starting the exercise.
 
-    #self.learning_hub(packet, packet_in)
-    self.learning_controller(packet, packet_in)
-    #self.learning_microflow_controller(packet, packet_in)
+    #sel.learning_hub(packet, packet_in)
+    #self.learning_controller(packet, packet_in)
+    self.learning_microflow_controller(packet, packet_in)
+    #self.policy_controller(packet, packet_in)    
 
 def launch ():
   """
