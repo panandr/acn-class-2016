@@ -1,0 +1,15 @@
+a) We ran 'H1 ping -c 100 H2'.
+   The average RTT time was 28.444 ms.
+   The first packet takes 23.4 ms to be delivered.
+   The average RTT is similar to the performance of the hub and is natural, since, although the controller performs MAC learning and avoids the flooding that was performed before, all the packets still have to go through the controller in order to be routed afterwards (no flows are still installed on the routers.)
+
+b) We ran 'H1 ping -c 100 H5'.
+   The average RTT was : 32.504 ms.
+
+   Compared to 'H1 ping -c 100 H4' average RTT time which is 34.386 ms it is of cours very similar because the distance of both H4 and H5 from H1 is the same (4 hops).
+
+c) Next we ran an iperf instance as before, with H1 being the iperf server and H5 the iperf client.
+
+   The throughput this time was 2.85 Mbits/sec.
+
+   Compared to the Hub Controller, the throughput is higher, since a lot of bandwidth that was lost due to the floodings is now utilized.

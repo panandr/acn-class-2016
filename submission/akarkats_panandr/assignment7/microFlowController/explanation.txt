@@ -1,0 +1,33 @@
+a) We ran 'H1 ping -c100 H2'.
+   The average RTT was: 1.383 ms which is orders of magnitudes lower than the RTTs of the hub and the learning switch. This is because, after the first packet reaches the controller, a rule is installed on the switches and the next packets don't have to go through the controller.
+This is exactly the reason why the first ICMP packet has an RTT delay of 133 ms, while the rest have about 0.05 ms. The source port and source and destination addresses are matched against the rule on the switches and the packet is forwarded to the respective out port instantly.
+
+b) We then performed a 'pingall' to verify that all the hosts are pingable.
+
+*** Ping: testing ping reachability
+h1 -> h2 h3 h4 h5
+h2 -> h1 h3 h4 h5
+h3 -> h1 h2 h4 h5
+h4 -> h1 h2 h3 h5
+h5 -> h1 h2 h3 h4
+*** Results: 0% dropped (20/20 received)
+
+The microflow rules that are installed in each switch are:
+
+mininet> dpctl dump-flows
+*** s1 ------------------------------------------------------------------------
+NXST_FLOW reply (xid=0x4):
+ cookie=0x0, duration=716.154s, table=0, n_packets=8, n_bytes=336, idle_age=134, priority=32769,arp,dl_dst=02:00:00:00:be:ef actions=CONTROLLER:65535
+ cookie=0x0, duration=716.193s, table=0, n_packets=139, n_bytes=5699, idle_age=0, priority=65000,dl_dst=01:23:20:00:00:01,dl_type=0x88cc actions=CONTROLLER:65535
+*** s2 ------------------------------------------------------------------------
+NXST_FLOW reply (xid=0x4):
+ cookie=0x0, duration=716.097s, table=0, n_packets=0, n_bytes=0, idle_age=716, priority=32769,arp,dl_dst=02:00:00:00:be:ef actions=CONTROLLER:65535
+ cookie=0x0, duration=716.134s, table=0, n_packets=277, n_bytes=11357, idle_age=2, priority=65000,dl_dst=01:23:20:00:00:01,dl_type=0x88cc actions=CONTROLLER:65535
+*** s3 ------------------------------------------------------------------------
+NXST_FLOW reply (xid=0x4):
+ cookie=0x0, duration=716.076s, table=0, n_packets=0, n_bytes=0, idle_age=716, priority=32769,arp,dl_dst=02:00:00:00:be:ef actions=CONTROLLER:65535
+ cookie=0x0, duration=716.114s, table=0, n_packets=138, n_bytes=5658, idle_age=5, priority=65000,dl_dst=01:23:20:00:00:01,dl_type=0x88cc actions=CONTROLLER:65535
+
+c) Finally we ran an iperf with H1 as the server and H5 as the client as before:
+
+The computed throughput was 27.7 Gbits/sec which is almost 10000x the throughputs of the controllers implemented before.

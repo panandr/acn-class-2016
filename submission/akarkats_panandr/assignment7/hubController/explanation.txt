@@ -1,0 +1,28 @@
+a) We ran 'H1 ping -c 100 H2'.
+   On average of the 100 packets it takes 27.203 ms per RTT.
+   Because our controller makes the virtual switches act as simple hubs that just flood any receiving   packet, this ping alone results in traffic generated in all flow and switch interfaces.
+   Attached is also a plot of the RTT per ping.
+
+b) We ran 'H1 ping -c 100 H5'.
+   The average RTT now is 32.686 ms which is a bit larger than the first occasion since the hosts H1    and H2 are closer than H1 and H5.
+
+c) We then performed 'pingall'. The output is:
+
+   mininet> pingall
+   *** Ping: testing ping reachability
+   h1 -> h2 h3 h4 h5
+   h2 -> h1 h3 h4 h5
+   h3 -> h1 h2 h4 h5
+   h4 -> h1 h2 h3 h5
+   h5 -> h1 h2 h3 h4
+   *** Results: 0% dropped (20/20 received)
+
+   This confirms that all hosts are pingable.
+
+d) We then tested the performance of the networm by running iperf on a pair of hosts (h1, h5):
+
+   h1> iperf -s            # h1  will be our iperf server.
+
+   h5> iperf -c 10.0.0.1   # h5 will be our iperf client.
+
+   The reported throughput for the client was : 1.85 Mbits/sec
