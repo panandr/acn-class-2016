@@ -25,7 +25,6 @@ class MyTopo( Topo ):
         Host3 = self.addHost( 'h3' )
         Host4 = self.addHost( 'h4' )
         Host5 = self.addHost( 'h5' )
-        print(Host1.IP())
 
 	
         Switch1 = self.addSwitch( 's1' )
