@@ -73,8 +73,8 @@ class Tutorial (object):
     msg.priority = priority
     msg.match = of.ofp_match( in_port = src_port,
 			      dl_src  = src_mac,
-                              dl_dst  = dst_mac)
-    msg.match.dl_type = dl_type
+                              dl_dst  = dst_mac,
+  			      dl_type = dl_type)
     msg.idle_timeout = timeout
     msg.actions.append( of.ofp_action_output( port = out_port))
     self.connection.send(msg)
@@ -92,6 +92,7 @@ class Tutorial (object):
     # All other traffic is handles by switches as if
     # they are simple learning microflow switches
     if packet.type == packet.IP_TYPE:
+      
       # ip_src = packet.
       return
     else:
@@ -177,7 +178,7 @@ class Tutorial (object):
     """
     Handles packet in messages from the switch.
     """
-
+   
     packet = event.parsed # This is the parsed packet data.
     if not packet.parsed:
       log.warning("Ignoring incomplete packet")
@@ -190,8 +191,8 @@ class Tutorial (object):
 
     #sel.learning_hub(packet, packet_in)
     #self.learning_controller(packet, packet_in)
-    #self.learning_microflow_controller(packet, packet_in)
-    self.policy_controller(packet, packet_in)    
+    self.learning_microflow_controller(packet, packet_in)
+    #self.policy_controller(packet, packet_in)    
 
 def launch ():
   """
@@ -207,10 +208,12 @@ def launch ():
   pox.openflow.discovery.launch()
  
   pox.openflow.spanning_tree.launch()
-  
+
   def start_switch (event):
     log.debug("Controlling %s" % (event.connection,))
     Tutorial(event.connection)
+  
   core.openflow.addListenerByName("ConnectionUp", start_switch)
+
   
 

@@ -87,6 +87,7 @@ class HostEvent (Event):
     self.leave = leave
     self.move = move
 
+    log.info("IN INIT")
     assert sum(1 for x in [join,leave,move] if x) == 1
 
     # You can alter these and they'll change where we think it goes...
@@ -308,6 +309,7 @@ class host_tracker (EventMixin):
       # new mapping
       ipEntry = IpEntry(hasARP)
       macEntry.ipAddrs[pckt_srcip] = ipEntry
+      log.info("EO")
       log.info("Learned %s got IP %s", str(macEntry), str(pckt_srcip) )
     if hasARP:
       ipEntry.pings.received()
