@@ -42,12 +42,25 @@ class acn_controller(object):
     log.info("Started")
 
     core.openflow_discovery.addListeners(self)
-    core.host_tracker.addListeners(self)
+    # core.host_tracker.addListeners(self)
 
     # dictionary that keeps connection/links/hosts/mac_to_port
     # and possibly name of the switch
     # per different datapatch-id
     self.dpid_dict = {}
+    self.hosts = {}
+
+  def track_host(self, packet, dpid):
+    
+    if (packet.type == packet.ARP_TYPE) and (packet.payload.opcode == 1):
+      log.debug("Received arp request!")
+
+      src_ip = packet.payload.protosrc      
+      if src_ip not in self.hosts:
+        self.hosts[src_ip] = ''
+        self.dpid_dict[dpid]["hosts"].append(src_ip)
+        
+    return
 
   def install_ip_policy(self, connection, dpid, priority, src_ip, dst_ip, out_port, timeout):
     
@@ -101,12 +114,10 @@ class acn_controller(object):
   
     mac_to_port = self.dpid_dict[dpid]["mac_to_port"]
 
-    self.install_ip_policy( connection, 1, dpid, IPAddr("10.0.0.1"), IPAddr("10.0.0.4"), 
+    # self.install_ip_policy( connection, 1, dpid, IPAddr("10.0.0.1"), IPAddr("10.0.0.4"), 
 
     connection = self.dpid_dict[dpid]["connection"]
     
-
-    return
 
   def  learning_microflow_controller(self, dpid, packet, packet_in):
     
@@ -192,8 +203,8 @@ class acn_controller(object):
     self.dpid_dict.update({dpid_joined : {}})
     self.dpid_dict[dpid_joined].update({"connection" : conn})
     self.dpid_dict[dpid_joined].update({"mac_to_port" : {}})
-    self.dpid_dict[dpid_joined].update({"links" : {}})
-    self.dpid_dict[dpid_joined].update({"hosts" : {}})
+    self.dpid_dict[dpid_joined].update({"links" : []})
+    self.dpid_dict[dpid_joined].update({"hosts" : []})
  
   def _handle_PacketIn (self, event):
   
@@ -203,17 +214,20 @@ class acn_controller(object):
     dpid = event.dpid
     log.debug("PacketIn message from Switch with dpid = {}".format(dpid))
   
+    self.track_host(packet, dpid)
+
     # self.simple_hub(dpid , packet, packet_in) 
     # self.learning_controller(dpid, packet, packet_in) 
     self.learning_microflow_controller(dpid, packet, packet_in)
+    # self.policy_controller(dpid, packet, packet_in)
 
   def _handle_LinkEvent (self, event):
+    return  
+    # link = event.link
+    # dpid_source = link.dpid1
+    # dpid_dest = link.dpid2
     
-    link = event.link
-    dpid_source = link.dpid1
-    dpid_dest = link.dpid2
-    
-    log.debug("LinkUpdate for Link {}->{}".format(dpid_source, dpid_dest))
+    # log.debug("LinkUpdate for Link {}->{}".format(dpid_source, dpid_dest))
 
   def _handle_HostEvent (self, event):
     return;   
@@ -227,6 +241,7 @@ def launch ():
 
   pox.log.launch(format="[@@@bold@@@level%(name)-22s@@@reset] " +
                         "@@@bold%(message)s@@@normal")
+
   pox.openflow.discovery.launch() 
   pox.openflow.spanning_tree.launch()
   pox.host_tracker.launch()
