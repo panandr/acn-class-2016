@@ -49,6 +49,18 @@ class acn_controller(object):
     # per different datapatch-id
     self.dpid_dict = {}
 
+  def install_ip_policy(self, connection, dpid, priority, src_ip, dst_ip, out_port, timeout):
+    
+    msg = of.of_flow_mod()
+    msg.priority = priority
+    msg.match = of.ofp_match( nw_src = src_ip,
+                              nw_dst = dst_ip)
+    msg.idle_timeout = timeout
+    msg.actions.append( of.ofp_action_output( port = out_port))
+
+    connection.send(msg)
+
+
   def install_rule( self, connection, priority, src_port, src_mac, dst_mac, out_port, timeout, dl_type):
     log.debug("Switch-{}: Installing rule src:{} , src_port {}, dst {} -> dst_port {}".
               format( connection.dpid, src_mac, src_port, dst_mac, out_port))
@@ -86,6 +98,14 @@ class acn_controller(object):
     self.resend_packet(connection, packet_in, of.OFPP_FLOOD)  
 
   def policy_controller(self, dpid, packet, packet_in):
+  
+    mac_to_port = self.dpid_dict[dpid]["mac_to_port"]
+
+    self.install_ip_policy( connection, 1, dpid, IPAddr("10.0.0.1"), IPAddr("10.0.0.4"), 
+
+    connection = self.dpid_dict[dpid]["connection"]
+    
+
     return
 
   def  learning_microflow_controller(self, dpid, packet, packet_in):
