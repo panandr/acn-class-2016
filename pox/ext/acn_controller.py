@@ -23,6 +23,7 @@ It's roughly similar to the one Brandon Heller did for NOX.
 
 from pox.core import core
 import pox.openflow.libopenflow_01 as of
+from pox.lib.addresses import IPAddr,EthAddr,parse_cidr
 import time
 import pox.lib.packet as pkt
 import hashlib
@@ -63,9 +64,9 @@ class Tutorial (object):
     # Send message to switch
     self.connection.send(msg)
   
-  def install_rule( self, priority, src_port, src_mac, dst_mac):
+  def install_rule( self, priority, src_port, src_mac, dst_mac, out_port, timeout, dl_type):
     log.debug("Switch-{}: Installing rule src:{} , src_port {}, dst {} -> dst_port {}".
-              format( self.connection.dpid, src_mac, src_port, dst_mac, self.mac_to_port[str(dst_mac)]))
+              format( self.connection.dpid, src_mac, src_port, dst_mac, out_port))
     
     # TODO: Maybe do a more fine-grained match ? 
     msg = of.ofp_flow_mod()
@@ -73,7 +74,9 @@ class Tutorial (object):
     msg.match = of.ofp_match( in_port = src_port,
 			      dl_src  = src_mac,
                               dl_dst  = dst_mac)
-    msg.actions.append( of.ofp_action_output( port = self.mac_to_port[str(dst_mac)]))
+    msg.match.dl_type = dl_type
+    msg.idle_timeout = timeout
+    msg.actions.append( of.ofp_action_output( port = out_port))
     self.connection.send(msg)
 
   
@@ -82,6 +85,18 @@ class Tutorial (object):
     self.resend_packet(packet_in, of.OFPP_FLOOD)
   
   def policy_controller(self, packet, packet_in):
+    
+    self.mac_to_port[str(packet.src)] = packet_in.in_port
+     
+    # IP Traffic is handled according to policy.
+    # All other traffic is handles by switches as if
+    # they are simple learning microflow switches
+    if packet.type == packet.IP_TYPE:
+      # ip_src = packet.
+      return
+    else:
+      self.learning_microflow_controller(packet, packet_in)      
+   
     return
 
   def  learning_microflow_controller(self, packet, packet_in):
@@ -89,13 +104,15 @@ class Tutorial (object):
     # Update mac-to-port entry, if it does not
     # exist, insert it
     self.mac_to_port[str(packet.src)] = packet_in.in_port
-  
+
     # if dst is multicast flood it and return from the method
     if packet.dst.is_multicast:
         log.debug("Switch-{}: Type: {} . host {} --> FLOOD --> host {}".
                  format( str(self.connection.dpid), pkt.ETHERNET.ethernet.getNameForType(packet.type),str(packet.src), str(packet.dst) ))
         
 	self.flood(packet, packet_in)
+ 
+        self.install_rule( 1, packet_in.in_port, packet.src, EthAddr("ff:ff:ff:ff:ff:ff"), of.OFPP_FLOOD, 5, packet.type)
 
     elif str(packet.dst) in self.mac_to_port:
         out_port = self.mac_to_port[str(packet.dst)]
@@ -106,7 +123,7 @@ class Tutorial (object):
         self.resend_packet(packet_in, out_port)
       
         # additionally, install a rule per flow (src, src-port, dst, dst-port)
-        self.install_rule( 1, packet_in.in_port, packet.src, packet.dst)
+        self.install_rule( 1, packet_in.in_port, packet.src, packet.dst, out_port, 1, packet.type)
               
     else:
         log.debug("Switch-{}: Type: {} . host {} --> FLOOD --> host {}".
@@ -173,8 +190,8 @@ class Tutorial (object):
 
     #sel.learning_hub(packet, packet_in)
     #self.learning_controller(packet, packet_in)
-    self.learning_microflow_controller(packet, packet_in)
-    #self.policy_controller(packet, packet_in)    
+    #self.learning_microflow_controller(packet, packet_in)
+    self.policy_controller(packet, packet_in)    
 
 def launch ():
   """
