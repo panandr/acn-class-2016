@@ -303,7 +303,15 @@ class acn_controller(object):
     self.dpid_dict[dpid_joined].update({"mac_to_port" : {}})
     self.dpid_dict[dpid_joined].update({"links" : []})
     self.dpid_dict[dpid_joined].update({"hosts" : []})
+
+  def remove_connection(self, conn):
+
+    dpid_removed = conn.dpid
+    log.info("ConnectionDown message for Switch with DPID {}".format(dpid_removed))
  
+    self.dpid_dict.pop( dpid_removed , None)
+    self.hosts = {k: v for k, v in self.hosts.iteritems() if v[0] != dpid_removed}
+
   def _handle_PacketIn (self, event):
   
     packet = event.parsed
@@ -354,8 +362,11 @@ def launch ():
 
   def connection_added(event):
     acn.add_connection(event.connection)
+  def connection_removed(event):
+    acn.remove_connection(event.connection)
 
   core.openflow.addListenerByName("ConnectionUp", connection_added)
+  core.openflow.addListenerByName("ConnectionDown", connection_removed)
 
   
 
