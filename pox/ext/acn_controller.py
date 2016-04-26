@@ -77,7 +77,7 @@ class acn_controller(object):
                               in_port = in_port,
                               nw_src = src_ip.toStr(),
                               nw_dst = dst_ip.toStr())
-    msg.idle_timeout = timeout
+    msg.hard_timeout = timeout
     msg.actions.append( of.ofp_action_output( port = out_port))
 
     connection.send(msg)
@@ -94,7 +94,7 @@ class acn_controller(object):
 			      dl_src  = src_mac,
                               dl_dst  = dst_mac,
   			      dl_type = dl_type)
-    msg.idle_timeout = timeout
+    msg.hard_timeout = timeout
     msg.actions.append( of.ofp_action_output( port = out_port))
     connection.send(msg)
 
