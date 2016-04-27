@@ -24,6 +24,7 @@ import pox.openflow.discovery
 import pox.host_tracker.host_tracker
 import pox.log.color
 import pox.log
+import sys
 
 H1 = "10.0.0.1"
 H2 = "10.0.0.2"
@@ -31,6 +32,7 @@ H3 = "10.0.0.3"
 H4 = "10.0.0.4"
 
 log = core.getLogger()
+GLOBAL_TIMEOUT = 20
 
 class acn_controller(object):
   
@@ -156,7 +158,7 @@ class acn_controller(object):
               break
 
           log.debug("Installing flow at S1 for S3!")           
-          self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, 100)
+          self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, GLOBAL_TIMEOUT)
 	  self.resend_packet( connection, packet_in, own_port)
 
         # if we are S2 install rule to send directly to H4  
@@ -167,7 +169,7 @@ class acn_controller(object):
           dpid, own_port = self.hosts[dst_ip]
 
           log.debug("Installing rule and forwarding data to host!") 
-          self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, 100)
+          self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, GLOBAL_TIMEOUT)
 	  self.resend_packet( connection, packet_in, own_port)
 
         # if we are S3 install rule to send to S2 (switch with hosts H3,H4)
@@ -182,7 +184,7 @@ class acn_controller(object):
               break
 
           log.debug("Installing flow for host!")           
-          self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, 100)
+          self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, GLOBAL_TIMEOUT)
 	  self.resend_packet( connection, packet_in, own_port)
            
       else:
@@ -198,7 +200,7 @@ class acn_controller(object):
            dpid, own_port = self.hosts[dst_ip]
            
            log.debug("Installing rule and forwarding data to host!") 
-           self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, 100)
+           self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, GLOBAL_TIMEOUT)
  	   self.resend_packet( connection, packet_in, own_port)
 	else:
           
@@ -212,7 +214,7 @@ class acn_controller(object):
               break
  
           log.debug("Installing flow for host!")           
-          self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, 100)
+          self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, GLOBAL_TIMEOUT)
 	  self.resend_packet( connection, packet_in, own_port)
     else:
       self.learning_microflow_controller(dpid, packet, packet_in)
@@ -230,7 +232,7 @@ class acn_controller(object):
         
 	self.flood( connection, packet, packet_in)
  
-        self.install_rule( connection, 1, packet_in.in_port, packet.src, EthAddr("ff:ff:ff:ff:ff:ff"), of.OFPP_FLOOD, 100, packet.type)
+        self.install_rule( connection, 1, packet_in.in_port, packet.src, EthAddr("ff:ff:ff:ff:ff:ff"), of.OFPP_FLOOD, 200, packet.type)
 
     elif packet.dst in mac_to_port:
         out_port = mac_to_port[packet.dst]
@@ -241,7 +243,7 @@ class acn_controller(object):
         self.resend_packet( connection, packet_in, out_port)
       
         # additionally, install a rule per flow (src, src-port, dst, dst-port)
-        self.install_rule( connection, 1, packet_in.in_port, packet.src, packet.dst, out_port, 100, packet.type)
+        self.install_rule( connection, 1, packet_in.in_port, packet.src, packet.dst, out_port, GLOBAL_TIMEOUT, packet.type)
               
     else:
         log.debug("Switch-{}: Type: {} . host {} --> FLOOD --> host {}".
@@ -324,8 +326,8 @@ class acn_controller(object):
 
     # self.simple_hub(dpid , packet, packet_in) 
     # self.learning_controller(dpid, packet, packet_in) 
-    # self.learning_microflow_controller(dpid, packet, packet_in)
-    self.policy_controller(dpid, packet, packet_in)
+    self.learning_microflow_controller(dpid, packet, packet_in)
+    # self.policy_controller(dpid, packet, packet_in)
 
   def _handle_LinkEvent (self, event):
     
