@@ -1,0 +1,155 @@
+Ping between h1 and h2
+
+mininet> h1 ping h2 -c100
+PING 10.0.0.2 (10.0.0.2) 56(84) bytes of data.
+64 bytes from 10.0.0.2: icmp_seq=1 ttl=64 time=55.7 ms
+64 bytes from 10.0.0.2: icmp_seq=2 ttl=64 time=0.517 ms
+64 bytes from 10.0.0.2: icmp_seq=3 ttl=64 time=0.190 ms
+64 bytes from 10.0.0.2: icmp_seq=4 ttl=64 time=0.124 ms
+64 bytes from 10.0.0.2: icmp_seq=5 ttl=64 time=0.415 ms
+64 bytes from 10.0.0.2: icmp_seq=6 ttl=64 time=0.127 ms
+64 bytes from 10.0.0.2: icmp_seq=7 ttl=64 time=0.112 ms
+64 bytes from 10.0.0.2: icmp_seq=8 ttl=64 time=0.104 ms
+64 bytes from 10.0.0.2: icmp_seq=9 ttl=64 time=0.108 ms
+64 bytes from 10.0.0.2: icmp_seq=10 ttl=64 time=0.107 ms
+64 bytes from 10.0.0.2: icmp_seq=11 ttl=64 time=0.064 ms
+64 bytes from 10.0.0.2: icmp_seq=12 ttl=64 time=0.093 ms
+64 bytes from 10.0.0.2: icmp_seq=13 ttl=64 time=0.152 ms
+64 bytes from 10.0.0.2: icmp_seq=14 ttl=64 time=0.105 ms
+64 bytes from 10.0.0.2: icmp_seq=15 ttl=64 time=0.122 ms
+64 bytes from 10.0.0.2: icmp_seq=16 ttl=64 time=0.101 ms
+64 bytes from 10.0.0.2: icmp_seq=17 ttl=64 time=0.055 ms
+64 bytes from 10.0.0.2: icmp_seq=18 ttl=64 time=0.102 ms
+64 bytes from 10.0.0.2: icmp_seq=19 ttl=64 time=0.124 ms
+64 bytes from 10.0.0.2: icmp_seq=20 ttl=64 time=0.109 ms
+64 bytes from 10.0.0.2: icmp_seq=21 ttl=64 time=0.107 ms
+64 bytes from 10.0.0.2: icmp_seq=22 ttl=64 time=0.098 ms
+64 bytes from 10.0.0.2: icmp_seq=23 ttl=64 time=0.092 ms
+64 bytes from 10.0.0.2: icmp_seq=24 ttl=64 time=0.071 ms
+64 bytes from 10.0.0.2: icmp_seq=25 ttl=64 time=0.101 ms
+64 bytes from 10.0.0.2: icmp_seq=26 ttl=64 time=0.088 ms
+64 bytes from 10.0.0.2: icmp_seq=27 ttl=64 time=0.079 ms
+64 bytes from 10.0.0.2: icmp_seq=28 ttl=64 time=0.135 ms
+64 bytes from 10.0.0.2: icmp_seq=29 ttl=64 time=0.103 ms
+64 bytes from 10.0.0.2: icmp_seq=30 ttl=64 time=0.101 ms
+64 bytes from 10.0.0.2: icmp_seq=31 ttl=64 time=0.094 ms
+64 bytes from 10.0.0.2: icmp_seq=32 ttl=64 time=0.145 ms
+64 bytes from 10.0.0.2: icmp_seq=33 ttl=64 time=0.056 ms
+64 bytes from 10.0.0.2: icmp_seq=34 ttl=64 time=0.106 ms
+64 bytes from 10.0.0.2: icmp_seq=35 ttl=64 time=0.048 ms
+64 bytes from 10.0.0.2: icmp_seq=36 ttl=64 time=0.067 ms
+64 bytes from 10.0.0.2: icmp_seq=37 ttl=64 time=0.051 ms
+64 bytes from 10.0.0.2: icmp_seq=38 ttl=64 time=0.064 ms
+64 bytes from 10.0.0.2: icmp_seq=39 ttl=64 time=0.064 ms
+64 bytes from 10.0.0.2: icmp_seq=40 ttl=64 time=0.077 ms
+64 bytes from 10.0.0.2: icmp_seq=41 ttl=64 time=0.059 ms
+64 bytes from 10.0.0.2: icmp_seq=42 ttl=64 time=0.123 ms
+64 bytes from 10.0.0.2: icmp_seq=43 ttl=64 time=0.049 ms
+64 bytes from 10.0.0.2: icmp_seq=44 ttl=64 time=0.084 ms
+64 bytes from 10.0.0.2: icmp_seq=45 ttl=64 time=0.104 ms
+64 bytes from 10.0.0.2: icmp_seq=46 ttl=64 time=0.116 ms
+64 bytes from 10.0.0.2: icmp_seq=47 ttl=64 time=0.104 ms
+64 bytes from 10.0.0.2: icmp_seq=48 ttl=64 time=0.141 ms
+64 bytes from 10.0.0.2: icmp_seq=49 ttl=64 time=0.055 ms
+64 bytes from 10.0.0.2: icmp_seq=50 ttl=64 time=0.064 ms
+64 bytes from 10.0.0.2: icmp_seq=51 ttl=64 time=0.046 ms
+64 bytes from 10.0.0.2: icmp_seq=52 ttl=64 time=0.119 ms
+64 bytes from 10.0.0.2: icmp_seq=53 ttl=64 time=0.049 ms
+64 bytes from 10.0.0.2: icmp_seq=54 ttl=64 time=0.103 ms
+64 bytes from 10.0.0.2: icmp_seq=55 ttl=64 time=0.053 ms
+64 bytes from 10.0.0.2: icmp_seq=56 ttl=64 time=0.066 ms
+64 bytes from 10.0.0.2: icmp_seq=57 ttl=64 time=0.070 ms
+64 bytes from 10.0.0.2: icmp_seq=58 ttl=64 time=0.090 ms
+64 bytes from 10.0.0.2: icmp_seq=59 ttl=64 time=0.061 ms
+64 bytes from 10.0.0.2: icmp_seq=60 ttl=64 time=0.083 ms
+64 bytes from 10.0.0.2: icmp_seq=61 ttl=64 time=0.126 ms
+64 bytes from 10.0.0.2: icmp_seq=62 ttl=64 time=0.105 ms
+64 bytes from 10.0.0.2: icmp_seq=63 ttl=64 time=0.231 ms
+64 bytes from 10.0.0.2: icmp_seq=64 ttl=64 time=0.151 ms
+64 bytes from 10.0.0.2: icmp_seq=65 ttl=64 time=0.085 ms
+64 bytes from 10.0.0.2: icmp_seq=66 ttl=64 time=0.121 ms
+64 bytes from 10.0.0.2: icmp_seq=67 ttl=64 time=0.056 ms
+64 bytes from 10.0.0.2: icmp_seq=68 ttl=64 time=0.057 ms
+64 bytes from 10.0.0.2: icmp_seq=69 ttl=64 time=0.072 ms
+64 bytes from 10.0.0.2: icmp_seq=70 ttl=64 time=0.063 ms
+64 bytes from 10.0.0.2: icmp_seq=71 ttl=64 time=0.050 ms
+64 bytes from 10.0.0.2: icmp_seq=72 ttl=64 time=0.059 ms
+64 bytes from 10.0.0.2: icmp_seq=73 ttl=64 time=0.079 ms
+64 bytes from 10.0.0.2: icmp_seq=74 ttl=64 time=0.051 ms
+64 bytes from 10.0.0.2: icmp_seq=75 ttl=64 time=0.051 ms
+64 bytes from 10.0.0.2: icmp_seq=76 ttl=64 time=0.055 ms
+64 bytes from 10.0.0.2: icmp_seq=77 ttl=64 time=0.080 ms
+64 bytes from 10.0.0.2: icmp_seq=78 ttl=64 time=0.123 ms
+64 bytes from 10.0.0.2: icmp_seq=79 ttl=64 time=0.048 ms
+64 bytes from 10.0.0.2: icmp_seq=80 ttl=64 time=0.052 ms
+64 bytes from 10.0.0.2: icmp_seq=81 ttl=64 time=0.049 ms
+64 bytes from 10.0.0.2: icmp_seq=82 ttl=64 time=0.051 ms
+64 bytes from 10.0.0.2: icmp_seq=83 ttl=64 time=0.095 ms
+64 bytes from 10.0.0.2: icmp_seq=84 ttl=64 time=0.049 ms
+64 bytes from 10.0.0.2: icmp_seq=85 ttl=64 time=0.049 ms
+64 bytes from 10.0.0.2: icmp_seq=86 ttl=64 time=0.053 ms
+64 bytes from 10.0.0.2: icmp_seq=87 ttl=64 time=0.052 ms
+64 bytes from 10.0.0.2: icmp_seq=88 ttl=64 time=0.087 ms
+64 bytes from 10.0.0.2: icmp_seq=89 ttl=64 time=0.052 ms
+64 bytes from 10.0.0.2: icmp_seq=90 ttl=64 time=0.051 ms
+64 bytes from 10.0.0.2: icmp_seq=91 ttl=64 time=0.050 ms
+64 bytes from 10.0.0.2: icmp_seq=92 ttl=64 time=0.051 ms
+64 bytes from 10.0.0.2: icmp_seq=93 ttl=64 time=0.052 ms
+64 bytes from 10.0.0.2: icmp_seq=94 ttl=64 time=0.049 ms
+64 bytes from 10.0.0.2: icmp_seq=95 ttl=64 time=0.048 ms
+64 bytes from 10.0.0.2: icmp_seq=96 ttl=64 time=0.052 ms
+64 bytes from 10.0.0.2: icmp_seq=97 ttl=64 time=0.056 ms
+64 bytes from 10.0.0.2: icmp_seq=98 ttl=64 time=0.053 ms
+64 bytes from 10.0.0.2: icmp_seq=99 ttl=64 time=0.072 ms
+64 bytes from 10.0.0.2: icmp_seq=100 ttl=64 time=0.065 ms
+
+--- 10.0.0.2 ping statistics ---
+100 packets transmitted, 100 received, 0% packet loss, time 99049ms
+rtt min/avg/max/mdev = 0.046/0.648/55.795/5.542 ms
+
+Dumping the flows in all switches.
+
+mininet> dpctl dump-flows
+*** s1 ------------------------------------------------------------------------
+NXST_FLOW reply (xid=0x4):
+ cookie=0x0, duration=149.672s, table=0, n_packets=2, n_bytes=84, hard_timeout=1000, idle_age=67, priority=1,arp,in_port=1,dl_src=2a:d4:07:68:6c:eb,dl_dst=aa:ef:24:0c:cb:d7 actions=output:2
+ cookie=0x0, duration=154.71s, table=0, n_packets=99, n_bytes=9702, hard_timeout=1000, idle_age=55, priority=1,ip,in_port=2,dl_src=aa:ef:24:0c:cb:d7,dl_dst=2a:d4:07:68:6c:eb actions=output:1
+ cookie=0x0, duration=154.732s, table=0, n_packets=99, n_bytes=9702, hard_timeout=1000, idle_age=55, priority=1,ip,in_port=1,dl_src=2a:d4:07:68:6c:eb,dl_dst=aa:ef:24:0c:cb:d7 actions=output:2
+ cookie=0x0, duration=154.78s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=154, priority=1,arp,in_port=1,dl_src=2a:d4:07:68:6c:eb,dl_dst=ff:ff:ff:ff:ff:ff actions=FLOOD
+ cookie=0x0, duration=154.775s, table=0, n_packets=3, n_bytes=126, hard_timeout=1000, idle_age=67, priority=1,arp,in_port=2,dl_src=aa:ef:24:0c:cb:d7,dl_dst=2a:d4:07:68:6c:eb actions=output:1
+ cookie=0x0, duration=164.304s, table=0, n_packets=32, n_bytes=1312, idle_age=0, priority=65000,dl_dst=01:23:20:00:00:01,dl_type=0x88cc actions=CONTROLLER:65535
+ cookie=0x0, duration=154.732s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=154, priority=1,ipv6,in_port=3,dl_src=8a:cc:3f:8e:f1:72,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=155.348s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=155, priority=1,ipv6,in_port=1,dl_src=2a:d4:07:68:6c:eb,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=154.672s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=154, priority=1,ipv6,in_port=3,dl_src=b6:56:a3:e3:ec:c5,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=155.272s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=155, priority=1,ipv6,in_port=3,dl_src=de:c1:8a:89:88:9d,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=154.905s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=154, priority=1,ipv6,in_port=2,dl_src=aa:ef:24:0c:cb:d7,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+*** s2 ------------------------------------------------------------------------
+NXST_FLOW reply (xid=0x4):
+ cookie=0x0, duration=154.784s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=154, priority=1,arp,in_port=1,dl_src=2a:d4:07:68:6c:eb,dl_dst=ff:ff:ff:ff:ff:ff actions=FLOOD
+ cookie=0x0, duration=164.315s, table=0, n_packets=63, n_bytes=2583, idle_age=1, priority=65000,dl_dst=01:23:20:00:00:01,dl_type=0x88cc actions=CONTROLLER:65535
+ cookie=0x0, duration=155.392s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=155, priority=1,ipv6,in_port=1,dl_src=2a:d4:07:68:6c:eb,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=154.913s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=154, priority=1,ipv6,in_port=1,dl_src=aa:ef:24:0c:cb:d7,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=154.783s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=154, priority=1,ipv6,in_port=2,dl_src=8a:cc:3f:8e:f1:72,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=155.32s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=155, priority=1,ipv6,in_port=2,dl_src=de:c1:8a:89:88:9d,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=154.718s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=154, priority=1,ipv6,in_port=2,dl_src=b6:56:a3:e3:ec:c5,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+*** s3 ------------------------------------------------------------------------
+NXST_FLOW reply (xid=0x4):
+ cookie=0x0, duration=154.748s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=154, priority=1,arp,in_port=1,dl_src=2a:d4:07:68:6c:eb,dl_dst=ff:ff:ff:ff:ff:ff actions=FLOOD
+ cookie=0x0, duration=164.35s, table=0, n_packets=31, n_bytes=1271, idle_age=4, priority=65000,dl_dst=01:23:20:00:00:01,dl_type=0x88cc actions=CONTROLLER:65535
+ cookie=0x0, duration=154.794s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=154, priority=1,ipv6,in_port=3,dl_src=8a:cc:3f:8e:f1:72,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=155.397s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=155, priority=1,ipv6,in_port=1,dl_src=2a:d4:07:68:6c:eb,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=154.919s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=154, priority=1,ipv6,in_port=1,dl_src=aa:ef:24:0c:cb:d7,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=155.33s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=155, priority=1,ipv6,in_port=2,dl_src=de:c1:8a:89:88:9d,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=154.687s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=154, priority=1,ipv6,in_port=4,dl_src=b6:56:a3:e3:ec:c5,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+
+Pinging all hosts.
+
+mininet> pingall
+*** Ping: testing ping reachability
+h1 -> h2 h3 h4 h5 
+h2 -> h1 h3 h4 h5 
+h3 -> h1 h2 h4 h5 
+h4 -> h1 h2 h3 h5 
+h5 -> h1 h2 h3 h4 
+*** Results: 0% dropped (20/20 received)
+

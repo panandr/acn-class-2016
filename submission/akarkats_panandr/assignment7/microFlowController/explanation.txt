@@ -1,6 +1,20 @@
+In our implementation we install rules that match on :
+
+   protocol-type, src mac, src port, dst mac, dst port 
+
+The protocol type can be either ARP or IP. This means that our microflow rules are fine grained and depend on the protocol type. We chose this so as to be able 
+to differentiate between IP traffic and ARP traffic, which is useful for the next question regarding the policies. The alternative would be to match only on 
+mac addresses and ports. In our implementation we have a global constant GLOBAL_TIMEOUT which is used for hard timeouts for flow rules.
+
+Furthermore, we install rules for broadcast packets, with action that instructs switch
+to flood packets to all ports.
+
 a) We ran 'H1 ping -c100 H2'.
-   The average RTT was: 1.383 ms which is orders of magnitudes lower than the RTTs of the hub and the learning switch. This is because, after the first packet reaches the controller, a rule is installed on the switches and the next packets don't have to go through the controller.
-This is exactly the reason why the first ICMP packet has an RTT delay of 133 ms, while the rest have about 0.05 ms. The source port and source and destination addresses are matched against the rule on the switches and the packet is forwarded to the respective out port instantly.
+
+   We can see that the average rtt is 0.648 ms which is orders of magnitude lower that the hub controller and the learning controller. We can see that the first packet
+   experiences 55.7 ms which is also as the other two implementations. The next packets however experience an extremely low RTT. This happens because the implementation
+   install rules on the switches that handle all the traffic required for the ping (ARP and IP traffic), and thus this traffic matches rules on the switches. Thus, the 
+   controller-switch channel is invoked only at the first packets of each flow, and all the other are handles in the fast path of the switches.
 
 b) We then performed a 'pingall' to verify that all the hosts are pingable.
 
@@ -12,22 +26,120 @@ h4 -> h1 h2 h3 h5
 h5 -> h1 h2 h3 h4
 *** Results: 0% dropped (20/20 received)
 
-The microflow rules that are installed in each switch are:
+The microflow rules that are installed in each switch after pinging all hosts are:
 
 mininet> dpctl dump-flows
 *** s1 ------------------------------------------------------------------------
 NXST_FLOW reply (xid=0x4):
- cookie=0x0, duration=716.154s, table=0, n_packets=8, n_bytes=336, idle_age=134, priority=32769,arp,dl_dst=02:00:00:00:be:ef actions=CONTROLLER:65535
- cookie=0x0, duration=716.193s, table=0, n_packets=139, n_bytes=5699, idle_age=0, priority=65000,dl_dst=01:23:20:00:00:01,dl_type=0x88cc actions=CONTROLLER:65535
+ cookie=0x0, duration=3.571s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,dl_src=5e:f7:a4:d0:e7:40,dl_dst=0e:d2:06:fd:db:cd actions=output:3
+ cookie=0x0, duration=3.692s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=3, priority=1,ip,in_port=1,dl_src=5e:f7:a4:d0:e7:40,dl_dst=6e:e4:5b:95:cc:9a actions=output:2
+ cookie=0x0, duration=3.432s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,dl_src=5e:f7:a4:d0:e7:40,dl_dst=9a:92:8f:ad:85:e3 actions=output:3
+ cookie=0x0, duration=2.522s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=3,dl_src=da:dc:c8:2e:58:98,dl_dst=6e:e4:5b:95:cc:9a actions=output:2
+ cookie=0x0, duration=3.103s, table=0, n_packets=2, n_bytes=84, hard_timeout=200, idle_age=2, priority=1,arp,in_port=2,dl_src=6e:e4:5b:95:cc:9a,dl_dst=ff:ff:ff:ff:ff:ff actions=FLOOD
+ cookie=0x0, duration=3.051s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=3, priority=1,arp,in_port=3,dl_src=0e:d2:06:fd:db:cd,dl_dst=6e:e4:5b:95:cc:9a actions=output:2
+ cookie=0x0, duration=2.636s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=2, priority=1,arp,in_port=3,dl_src=da:dc:c8:2e:58:98,dl_dst=6e:e4:5b:95:cc:9a actions=output:2
+ cookie=0x0, duration=3.655s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=3, priority=1,ip,in_port=2,dl_src=6e:e4:5b:95:cc:9a,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=3.007s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,dl_src=6e:e4:5b:95:cc:9a,dl_dst=0e:d2:06:fd:db:cd actions=output:3
+ cookie=0x0, duration=3.305s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=3, priority=1,arp,in_port=3,dl_src=da:dc:c8:2e:58:98,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=2.807s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,dl_src=6e:e4:5b:95:cc:9a,dl_dst=9a:92:8f:ad:85:e3 actions=output:3
+ cookie=0x0, duration=3.74s, table=0, n_packets=3, n_bytes=126, hard_timeout=200, idle_age=3, priority=1,arp,in_port=1,dl_src=5e:f7:a4:d0:e7:40,dl_dst=ff:ff:ff:ff:ff:ff actions=FLOOD
+ cookie=0x0, duration=3.313s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=3,dl_src=9a:92:8f:ad:85:e3,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=2.286s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=2, priority=1,arp,in_port=3,dl_src=9a:92:8f:ad:85:e3,dl_dst=ff:ff:ff:ff:ff:ff actions=FLOOD
+ cookie=0x0, duration=3.442s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=3, priority=1,arp,in_port=3,dl_src=9a:92:8f:ad:85:e3,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=3.701s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=3, priority=1,arp,in_port=2,dl_src=6e:e4:5b:95:cc:9a,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=2.593s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,dl_src=6e:e4:5b:95:cc:9a,dl_dst=da:dc:c8:2e:58:98 actions=output:3
+ cookie=0x0, duration=2.879s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=3,dl_src=0e:d2:06:fd:db:cd,dl_dst=6e:e4:5b:95:cc:9a actions=output:2
+ cookie=0x0, duration=3.529s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=3,dl_src=0e:d2:06:fd:db:cd,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=2.435s, table=0, n_packets=1, n_bytes=42, hard_timeout=200, idle_age=2, priority=1,arp,in_port=3,dl_src=0e:d2:06:fd:db:cd,dl_dst=ff:ff:ff:ff:ff:ff actions=FLOOD
+ cookie=0x0, duration=2.846s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=2, priority=1,arp,in_port=3,dl_src=9a:92:8f:ad:85:e3,dl_dst=6e:e4:5b:95:cc:9a actions=output:2
+ cookie=0x0, duration=3.615s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=3, priority=1,arp,in_port=3,dl_src=0e:d2:06:fd:db:cd,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=2.71s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=3,dl_src=9a:92:8f:ad:85:e3,dl_dst=6e:e4:5b:95:cc:9a actions=output:2
+ cookie=0x0, duration=3.267s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,dl_src=5e:f7:a4:d0:e7:40,dl_dst=da:dc:c8:2e:58:98 actions=output:3
+ cookie=0x0, duration=3.14s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=3,dl_src=da:dc:c8:2e:58:98,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=12.67s, table=0, n_packets=2, n_bytes=82, idle_age=4, priority=65000,dl_dst=01:23:20:00:00:01,dl_type=0x88cc actions=CONTROLLER:65535
+ cookie=0x0, duration=3.194s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=3, priority=1,ipv6,in_port=2,dl_src=6e:e4:5b:95:cc:9a,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=3.811s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=3, priority=1,ipv6,in_port=3,dl_src=9a:92:8f:ad:85:e3,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=3.391s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=3, priority=1,ipv6,in_port=3,dl_src=0e:d2:06:fd:db:cd,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=2.919s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=2, priority=1,ipv6,in_port=3,dl_src=da:dc:c8:2e:58:98,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=3.482s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=3, priority=1,ipv6,in_port=1,dl_src=5e:f7:a4:d0:e7:40,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
 *** s2 ------------------------------------------------------------------------
 NXST_FLOW reply (xid=0x4):
- cookie=0x0, duration=716.097s, table=0, n_packets=0, n_bytes=0, idle_age=716, priority=32769,arp,dl_dst=02:00:00:00:be:ef actions=CONTROLLER:65535
- cookie=0x0, duration=716.134s, table=0, n_packets=277, n_bytes=11357, idle_age=2, priority=65000,dl_dst=01:23:20:00:00:01,dl_type=0x88cc actions=CONTROLLER:65535
+ cookie=0x0, duration=2.299s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=2, priority=1,arp,in_port=2,dl_src=9a:92:8f:ad:85:e3,dl_dst=ff:ff:ff:ff:ff:ff actions=FLOOD
+ cookie=0x0, duration=3.553s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,dl_src=5e:f7:a4:d0:e7:40,dl_dst=0e:d2:06:fd:db:cd actions=output:2
+ cookie=0x0, duration=3.403s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,dl_src=5e:f7:a4:d0:e7:40,dl_dst=9a:92:8f:ad:85:e3 actions=output:2
+ cookie=0x0, duration=3.018s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=3, priority=1,arp,in_port=2,dl_src=0e:d2:06:fd:db:cd,dl_dst=6e:e4:5b:95:cc:9a actions=output:1
+ cookie=0x0, duration=2.754s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,dl_src=6e:e4:5b:95:cc:9a,dl_dst=9a:92:8f:ad:85:e3 actions=output:2
+ cookie=0x0, duration=3.629s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=3, priority=1,arp,in_port=2,dl_src=0e:d2:06:fd:db:cd,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=2.594s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,dl_src=6e:e4:5b:95:cc:9a,dl_dst=da:dc:c8:2e:58:98 actions=output:2
+ cookie=0x0, duration=3.074s, table=0, n_packets=2, n_bytes=84, hard_timeout=200, idle_age=2, priority=1,arp,in_port=1,dl_src=6e:e4:5b:95:cc:9a,dl_dst=ff:ff:ff:ff:ff:ff actions=FLOOD
+ cookie=0x0, duration=3.278s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=3, priority=1,arp,in_port=2,dl_src=da:dc:c8:2e:58:98,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=3.513s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,dl_src=0e:d2:06:fd:db:cd,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=3.474s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=3, priority=1,arp,in_port=2,dl_src=9a:92:8f:ad:85:e3,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=2.555s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,dl_src=da:dc:c8:2e:58:98,dl_dst=6e:e4:5b:95:cc:9a actions=output:1
+ cookie=0x0, duration=3.746s, table=0, n_packets=3, n_bytes=126, hard_timeout=200, idle_age=3, priority=1,arp,in_port=1,dl_src=5e:f7:a4:d0:e7:40,dl_dst=ff:ff:ff:ff:ff:ff actions=FLOOD
+ cookie=0x0, duration=2.822s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=2, priority=1,arp,in_port=2,dl_src=9a:92:8f:ad:85:e3,dl_dst=6e:e4:5b:95:cc:9a actions=output:1
+ cookie=0x0, duration=2.717s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,dl_src=9a:92:8f:ad:85:e3,dl_dst=6e:e4:5b:95:cc:9a actions=output:1
+ cookie=0x0, duration=2.981s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,dl_src=6e:e4:5b:95:cc:9a,dl_dst=0e:d2:06:fd:db:cd actions=output:2
+ cookie=0x0, duration=2.894s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,dl_src=0e:d2:06:fd:db:cd,dl_dst=6e:e4:5b:95:cc:9a actions=output:1
+ cookie=0x0, duration=2.514s, table=0, n_packets=1, n_bytes=42, hard_timeout=200, idle_age=2, priority=1,arp,in_port=2,dl_src=0e:d2:06:fd:db:cd,dl_dst=ff:ff:ff:ff:ff:ff actions=FLOOD
+ cookie=0x0, duration=2.675s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=2, priority=1,arp,in_port=2,dl_src=da:dc:c8:2e:58:98,dl_dst=6e:e4:5b:95:cc:9a actions=output:1
+ cookie=0x0, duration=3.33s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,dl_src=9a:92:8f:ad:85:e3,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=3.243s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,dl_src=5e:f7:a4:d0:e7:40,dl_dst=da:dc:c8:2e:58:98 actions=output:2
+ cookie=0x0, duration=3.134s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,dl_src=da:dc:c8:2e:58:98,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=12.633s, table=0, n_packets=5, n_bytes=205, idle_age=1, priority=65000,dl_dst=01:23:20:00:00:01,dl_type=0x88cc actions=CONTROLLER:65535
+ cookie=0x0, duration=3.825s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=3, priority=1,ipv6,in_port=2,dl_src=9a:92:8f:ad:85:e3,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=2.94s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=2, priority=1,ipv6,in_port=2,dl_src=da:dc:c8:2e:58:98,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=3.444s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=3, priority=1,ipv6,in_port=2,dl_src=0e:d2:06:fd:db:cd,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=3.205s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=3, priority=1,ipv6,in_port=1,dl_src=6e:e4:5b:95:cc:9a,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=3.474s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=3, priority=1,ipv6,in_port=1,dl_src=5e:f7:a4:d0:e7:40,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
 *** s3 ------------------------------------------------------------------------
 NXST_FLOW reply (xid=0x4):
- cookie=0x0, duration=716.076s, table=0, n_packets=0, n_bytes=0, idle_age=716, priority=32769,arp,dl_dst=02:00:00:00:be:ef actions=CONTROLLER:65535
- cookie=0x0, duration=716.114s, table=0, n_packets=138, n_bytes=5658, idle_age=5, priority=65000,dl_dst=01:23:20:00:00:01,dl_type=0x88cc actions=CONTROLLER:65535
+ cookie=0x0, duration=2.454s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,dl_src=0e:d2:06:fd:db:cd,dl_dst=9a:92:8f:ad:85:e3 actions=output:3
+ cookie=0x0, duration=3.562s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,dl_src=5e:f7:a4:d0:e7:40,dl_dst=0e:d2:06:fd:db:cd actions=output:2
+ cookie=0x0, duration=3.384s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,dl_src=5e:f7:a4:d0:e7:40,dl_dst=9a:92:8f:ad:85:e3 actions=output:3
+ cookie=0x0, duration=2.595s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=4,dl_src=da:dc:c8:2e:58:98,dl_dst=6e:e4:5b:95:cc:9a actions=output:1
+ cookie=0x0, duration=2.383s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,dl_src=0e:d2:06:fd:db:cd,dl_dst=da:dc:c8:2e:58:98 actions=output:4
+ cookie=0x0, duration=2.261s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=3,dl_src=9a:92:8f:ad:85:e3,dl_dst=da:dc:c8:2e:58:98 actions=output:4
+ cookie=0x0, duration=2.345s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=4,dl_src=da:dc:c8:2e:58:98,dl_dst=0e:d2:06:fd:db:cd actions=output:2
+ cookie=0x0, duration=3.218s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=4,dl_src=da:dc:c8:2e:58:98,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=3.08s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=3, priority=1,arp,in_port=2,dl_src=0e:d2:06:fd:db:cd,dl_dst=6e:e4:5b:95:cc:9a actions=output:1
+ cookie=0x0, duration=2.802s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,dl_src=6e:e4:5b:95:cc:9a,dl_dst=9a:92:8f:ad:85:e3 actions=output:3
+ cookie=0x0, duration=2.385s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=2, priority=1,arp,in_port=4,dl_src=da:dc:c8:2e:58:98,dl_dst=0e:d2:06:fd:db:cd actions=output:2
+ cookie=0x0, duration=2.687s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=2, priority=1,arp,in_port=4,dl_src=da:dc:c8:2e:58:98,dl_dst=6e:e4:5b:95:cc:9a actions=output:1
+ cookie=0x0, duration=3.642s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=3, priority=1,arp,in_port=2,dl_src=0e:d2:06:fd:db:cd,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=2.638s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,dl_src=6e:e4:5b:95:cc:9a,dl_dst=da:dc:c8:2e:58:98 actions=output:4
+ cookie=0x0, duration=3.119s, table=0, n_packets=2, n_bytes=84, hard_timeout=200, idle_age=2, priority=1,arp,in_port=1,dl_src=6e:e4:5b:95:cc:9a,dl_dst=ff:ff:ff:ff:ff:ff actions=FLOOD
+ cookie=0x0, duration=3.294s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=3, priority=1,arp,in_port=4,dl_src=da:dc:c8:2e:58:98,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=3.548s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,dl_src=0e:d2:06:fd:db:cd,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=2.273s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=2, priority=1,arp,in_port=4,dl_src=da:dc:c8:2e:58:98,dl_dst=9a:92:8f:ad:85:e3 actions=output:3
+ cookie=0x0, duration=3.346s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=3,dl_src=9a:92:8f:ad:85:e3,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=3.754s, table=0, n_packets=3, n_bytes=126, hard_timeout=200, idle_age=3, priority=1,arp,in_port=1,dl_src=5e:f7:a4:d0:e7:40,dl_dst=ff:ff:ff:ff:ff:ff actions=FLOOD
+ cookie=0x0, duration=2.314s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=2, priority=1,arp,in_port=3,dl_src=9a:92:8f:ad:85:e3,dl_dst=ff:ff:ff:ff:ff:ff actions=FLOOD
+ cookie=0x0, duration=3.526s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=3, priority=1,arp,in_port=3,dl_src=9a:92:8f:ad:85:e3,dl_dst=5e:f7:a4:d0:e7:40 actions=output:1
+ cookie=0x0, duration=2.423s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=3,dl_src=9a:92:8f:ad:85:e3,dl_dst=0e:d2:06:fd:db:cd actions=output:2
+ cookie=0x0, duration=2.527s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=2, priority=1,arp,in_port=3,dl_src=9a:92:8f:ad:85:e3,dl_dst=0e:d2:06:fd:db:cd actions=output:2
+ cookie=0x0, duration=2.989s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,dl_src=6e:e4:5b:95:cc:9a,dl_dst=0e:d2:06:fd:db:cd actions=output:2
+ cookie=0x0, duration=2.945s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,dl_src=0e:d2:06:fd:db:cd,dl_dst=6e:e4:5b:95:cc:9a actions=output:1
+ cookie=0x0, duration=2.872s, table=0, n_packets=0, n_bytes=0, hard_timeout=1000, idle_age=2, priority=1,arp,in_port=3,dl_src=9a:92:8f:ad:85:e3,dl_dst=6e:e4:5b:95:cc:9a actions=output:1
+ cookie=0x0, duration=2.222s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=4,dl_src=da:dc:c8:2e:58:98,dl_dst=9a:92:8f:ad:85:e3 actions=output:3
+ cookie=0x0, duration=2.567s, table=0, n_packets=1, n_bytes=42, hard_timeout=200, idle_age=2, priority=1,arp,in_port=2,dl_src=0e:d2:06:fd:db:cd,dl_dst=ff:ff:ff:ff:ff:ff actions=FLOOD
+ cookie=0x0, duration=2.762s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=3,dl_src=9a:92:8f:ad:85:e3,dl_dst=6e:e4:5b:95:cc:9a actions=output:1
+ cookie=0x0, duration=3.257s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,dl_src=5e:f7:a4:d0:e7:40,dl_dst=da:dc:c8:2e:58:98 actions=output:4
+ cookie=0x0, duration=12.608s, table=0, n_packets=2, n_bytes=82, idle_age=4, priority=65000,dl_dst=01:23:20:00:00:01,dl_type=0x88cc actions=CONTROLLER:65535
+ cookie=0x0, duration=3.806s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=3, priority=1,ipv6,in_port=3,dl_src=9a:92:8f:ad:85:e3,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=2.991s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=2, priority=1,ipv6,in_port=4,dl_src=da:dc:c8:2e:58:98,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=3.486s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=3, priority=1,ipv6,in_port=2,dl_src=0e:d2:06:fd:db:cd,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=3.146s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=3, priority=1,ipv6,in_port=1,dl_src=6e:e4:5b:95:cc:9a,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=3.42s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=3, priority=1,ipv6,in_port=1,dl_src=5e:f7:a4:d0:e7:40,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
 
-c) Finally we ran an iperf with H1 as the server and H5 as the client as before:
+We can see that we have rules that match in protocol type, src mac, src port, dst mac, dst port and we also have rules that match on broadcast packets. Our implementation is somewhat verbose on the number of rules
+that it installs. In the required scenarios this is not a problem since the topology is rather small, but considering the limited memory that datapaths usually have for larger topologies we should not install 
+so many rules.
 
-The computed throughput was 27.7 Gbits/sec which is almost 10000x the throughputs of the controllers implemented before.
+c) Finally we ran iperf between h1 and h5.
+
+    mininet> iperf h1 h5
+    *** Iperf: testing TCP bandwidth between h1 and h5
+    *** Results: ['15.9 Gbits/sec', '15.9 Gbits/sec']
+
+We can see that we achieve signifcantly higher throughput comparing to the previous implementations. This is due to the fact that the overhead of latency between controller-switch is minimal at this implementation.

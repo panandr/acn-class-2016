@@ -32,7 +32,7 @@ H3 = "10.0.0.3"
 H4 = "10.0.0.4"
 
 log = core.getLogger()
-GLOBAL_TIMEOUT = 1
+GLOBAL_TIMEOUT = 1000
 
 # This is our controller object. In our implementation there is only one Python Object responsible
 # for handling all related events.
@@ -336,9 +336,9 @@ class acn_controller(object):
   
     self.track_host(packet, packet_in, dpid)
 
-    self.simple_hub(dpid , packet, packet_in) 
+    # self.simple_hub(dpid , packet, packet_in) 
     # self.learning_controller(dpid, packet, packet_in) 
-    # self.learning_microflow_controller(dpid, packet, packet_in)
+    self.learning_microflow_controller(dpid, packet, packet_in)
     # self.policy_controller(dpid, packet, packet_in)
 
   def _handle_LinkEvent (self, event):
