@@ -6,8 +6,9 @@ The protocol type can be either ARP or IP. This means that our microflow rules a
 to differentiate between IP traffic and ARP traffic, which is useful for the next question regarding the policies. The alternative would be to match only on 
 mac addresses and ports. In our implementation we have a global constant GLOBAL_TIMEOUT which is used for hard timeouts for flow rules.
 
-Furthermore, we install rules for broadcast packets, with action that instructs switch
-to flood packets to all ports.
+Furthermore, we install rules for broadcast packets, with action that instructs switch to flood packets to all ports.
+
+We also run experiments we various hard timeouts and see how these affect the throughput.
 
 a) We ran 'H1 ping -c100 H2'.
 
@@ -143,3 +144,8 @@ c) Finally we ran iperf between h1 and h5.
     *** Results: ['15.9 Gbits/sec', '15.9 Gbits/sec']
 
 We can see that we achieve signifcantly higher throughput comparing to the previous implementations. This is due to the fact that the overhead of latency between controller-switch is minimal at this implementation.
+
+We also present a plot in which we vary the hard_timeout field of the rules at the switches from 1 to 35 second while we run for each value an iperf throughput test of length 30 second. We can see 
+that throughput is clearly lower in the case of hard timeout 1 second rather than 30 sec. 
+
+This makes sense since in the first case the controller is contacted ~30 fores during the experiment while in the last case where the timeout is 35 second it is contacted only once.

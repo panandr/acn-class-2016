@@ -32,7 +32,7 @@ H3 = "10.0.0.3"
 H4 = "10.0.0.4"
 
 log = core.getLogger()
-GLOBAL_TIMEOUT = 1000
+GLOBAL_TIMEOUT = 10
 
 # This is our controller object. In our implementation there is only one Python Object responsible
 # for handling all related events.
