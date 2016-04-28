@@ -27,13 +27,14 @@ plt.savefig("mls_12_ping.png")
 """
 Plot throughput for different hard timeout values.
 iperf is used to measure the througput.
+"""
 
 plt.clf()
 
 timeouts = []
 perf = []
 
-with open('throughput_vs_timeout.txt', 'r') as f:
+with open('timeouts.txt', 'r') as f:
     for line in f:
         timeouts.append(line.split()[0])
         perf.append(line.split()[1])
@@ -47,6 +48,5 @@ axes = plt.gca()
 #axes.set_xlim([0,100])
 
 plt.plot(timeouts, perf)
-plt.savefig("timeout.png")
+plt.savefig("timeouts.png")
 
-"""
