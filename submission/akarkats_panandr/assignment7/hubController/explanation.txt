@@ -1,10 +1,25 @@
+The topology that we test with the hub controller is custom-topo.py. 
+
+We boot up mininet with the command: 
+	sudo mn --custom custom-topo.py --topo mytopo --controller remote
+
 a) We ran 'H1 ping -c 100 H2'.
    On average of the 100 packets it takes 27.203 ms per RTT.
-   Because our controller makes the virtual switches act as simple hubs that just flood any receiving   packet, this ping alone results in traffic generated in all flow and switch interfaces.
-   Attached is also a plot of the RTT per ping.
+   Because our controller makes the virtual switches act as simple hubs that just flood any receiving   packet, this ping alone results in traffic generated in all flow and switch interfaces. We executed the
+   following command for the hosts (where h1 could be any host):
+
+   tcpdump -XX -n -i h1-eth0
+
+   and for the switches (where s1 could be any switch):
+
+   tcpdump -XX -n -i s1-eth1
+
+   Attached is also a plot of the RTT per ping. We can see that the various RTT for different ICMP packets is random, which makes sense, since our controller floods to all switch ports each incoming
+   packet.
 
 b) We ran 'H1 ping -c 100 H5'.
-   The average RTT now is 32.686 ms which is a bit larger than the first occasion since the hosts H1    and H2 are closer than H1 and H5.
+   The average RTT now is 32.686 ms which is a bit larger than the first occasion since the hosts H1 and H2 are closer than H1 and H5. Again, the RTT is random since the controller floods every packet 
+   to all ports.
 
 c) We then performed 'pingall'. The output is:
 
@@ -19,10 +34,10 @@ c) We then performed 'pingall'. The output is:
 
    This confirms that all hosts are pingable.
 
-d) We then tested the performance of the networm by running iperf on a pair of hosts (h1, h5):
+d) We then tested the performance of the network by running iperf on a pair of hosts (h1, h5) with the command on mininet console:
+ 
+   mininet> iperf h1 h5
+   *** Iperf: testing TCP bandwidth between h1 and h5
+   *** Results: ['6.98 Mbits/sec', '8.10 Mbits/sec']
 
-   h1> iperf -s            # h1  will be our iperf server.
 
-   h5> iperf -c 10.0.0.1   # h5 will be our iperf client.
-
-   The reported throughput for the client was : 1.85 Mbits/sec
