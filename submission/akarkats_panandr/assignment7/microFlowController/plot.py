@@ -39,8 +39,8 @@ with open('timeouts.txt', 'r') as f:
         timeouts.append(line.split()[0])
         perf.append(line.split()[1])
 
-plt.title("Microflow controller: Througput vs hard_timeout values for the flows")
-plt.xlabel("hard_timeout for flows (sec)")
+plt.title("Microflow controller: Throughput vs hard_timeout values for the rules")
+plt.xlabel("hard_timeout for rules (sec)")
 plt.ylabel("Throughput (Gbps)")
 
 axes = plt.gca()
