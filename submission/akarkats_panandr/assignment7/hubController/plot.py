@@ -4,13 +4,13 @@ import sys
 ping_id = []
 rtt = []
 
-with open('ping1-2.out', 'r') as f:
+with open('ping_1-2.out', 'r') as f:
     for idx, line in enumerate(f):
         #print idx, line
         ping_id.append(idx)
         rtt.append(float(line.strip('\n')))
 
-plt.title("PING between H1 and H2")
+plt.title("Simple Hub: PING between H1 and H2")
 plt.xlabel("ICMP packet ID")
 plt.ylabel("RTT time")
 
@@ -25,13 +25,13 @@ plt.clf()
 ping_id = []
 rtt = []
 
-with open('ping1-5.out', 'r') as f:
+with open('ping_1-5.out', 'r') as f:
     for idx, line in enumerate(f):
         #print idx, line
         ping_id.append(idx)
         rtt.append(float(line.strip('\n')))
 
-plt.title("PING between H1 and H5")
+plt.title("Simple Hub: PING between H1 and H5")
 plt.xlabel("ICMP packet ID")
 plt.ylabel("RTT time")
 
