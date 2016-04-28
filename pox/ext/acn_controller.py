@@ -338,8 +338,8 @@ class acn_controller(object):
 
     # self.simple_hub(dpid , packet, packet_in) 
     # self.learning_controller(dpid, packet, packet_in) 
-    self.learning_microflow_controller(dpid, packet, packet_in)
-    # self.policy_controller(dpid, packet, packet_in)
+    # self.learning_microflow_controller(dpid, packet, packet_in)
+    self.policy_controller(dpid, packet, packet_in)
 
   def _handle_LinkEvent (self, event):
     
