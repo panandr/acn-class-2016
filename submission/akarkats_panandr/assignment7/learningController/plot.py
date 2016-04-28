@@ -4,7 +4,7 @@ import sys
 ping_id = []
 rtt = []
 
-with open('lc_ping_12.out', 'r') as f:
+with open('ping_1-2.out', 'r') as f:
     for idx, line in enumerate(f):
         #print idx, line
         ping_id.append(idx)
@@ -27,7 +27,7 @@ rtt = []
 
 ################################
 
-with open('lc_ping_15.out', 'r') as f:
+with open('ping_1-5.out', 'r') as f:
     for idx, line in enumerate(f):
         #print idx, line
         ping_id.append(idx)
@@ -45,7 +45,12 @@ plt.savefig("lc_ping-h1-h5.png")
 
 ###############################
 
-with open('lc_ping_14.out', 'r') as f:
+plt.clf()
+
+ping_id = []
+rtt = []
+
+with open('ping_1-4.out', 'r') as f:
     for idx, line in enumerate(f):
         #print idx, line
         ping_id.append(idx)

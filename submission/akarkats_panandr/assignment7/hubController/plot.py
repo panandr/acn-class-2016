@@ -36,7 +36,7 @@ plt.xlabel("ICMP packet ID")
 plt.ylabel("RTT time")
 
 axes = plt.gca()
-axes.set_ylim([0, 100])
+axes.set_ylim([0, 120])
 
 plt.plot(ping_id, rtt)
 plt.savefig("ping-h1-h5.png")
