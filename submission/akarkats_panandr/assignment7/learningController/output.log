@@ -325,3 +325,9 @@ PING 10.0.0.4 (10.0.0.4) 56(84) bytes of data.
 100 packets transmitted, 100 received, 0% packet loss, time 99272ms
 rtt min/avg/max/mdev = 9.885/38.647/91.463/17.766 ms
 
+Iperf between h1 and h5
+
+mininet> iperf h1 h5
+*** Iperf: testing TCP bandwidth between h1 and h5
+*** Results: ['4.62 Mbits/sec', '5.05 Mbits/sec']
+

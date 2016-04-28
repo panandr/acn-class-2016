@@ -1,14 +1,26 @@
+For this experiment we run the custom-topo.py topology that we implemented.
+
 a) We ran 'H1 ping -c 100 H2'.
    The average RTT time was 29.846 ms. The first packet takes 17.6 ms to be delivered. The average of hub controller is at 29.179 ms. We can see that there is no difference
-   in the performance of the two implementations. This makes sense since this is a very simple topology. Each switch has 2 ports with two other switches. In the hub impleme    ntation we flooded the packet to all ports except the port that it came through. This means that  
+   in the performance of the two implementations. This makes sense since this is a very simple topology. Each switch has 2 ports with two other switches. In the hub implementation 
+   we flooded the packet to all ports except the port that it came through. This means that  in both implementations packets are flooded to only one port that leads to another switch
+   and thus the tw implementations perform the same.
 
 b) We ran 'H1 ping -c 100 H5'.
-   The average RTT was : 32.504 ms.
+   The average RTT was : 41.647 ms.
 
-   Compared to 'H1 ping -c 100 H4' average RTT time which is 34.386 ms it is of cours very similar because the distance of both H4 and H5 from H1 is the same (4 hops).
+   We ran 'H1 ping -c 100 H4'.
+   The average RTT was : 38.647 ms.
 
-c) Next we ran an iperf instance as before, with H1 being the iperf server and H5 the iperf client.
+   We can see that the ping from h1->h2 experiences the lowest RTT from the three cases. This is logical since it involves the lowest number of switch hops 
+   and thus the smallest delay. The h1->h4 and h1->h5 pings are almost the same since they involve the same number of hops in the topology.
 
-   The throughput this time was 2.85 Mbits/sec.
+c) Next, we run the command 
+   
+   mininet> iperf h1 h5
+   *** Iperf: testing TCP bandwidth between h1 and h5
+   *** Results: ['4.62 Mbits/sec', '5.05 Mbits/sec']
 
-   Compared to the Hub Controller, the throughput is higher, since a lot of bandwidth that was lost due to the floodings is now utilized.
+   We can see that the bandwidth achieved is almost the same as the hub controller. This again makes sense as explained in point 1). We should also note here that 
+   slight differences between different experiments can experience variations since we are running an emulated network inside a Virtual Machine.
+
