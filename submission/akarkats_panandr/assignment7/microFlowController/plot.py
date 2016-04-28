@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import sys
 
 """
 Plot ping trace for microflow controller.
@@ -8,7 +7,7 @@ Plot ping trace for microflow controller.
 ping_id = []
 rtt = []
 
-with open('mls_12_ping.out', 'r') as f:
+with open('mls_ping12', 'r') as f:
     for idx, line in enumerate(f):
         #print idx, line
         ping_id.append(idx)
@@ -16,11 +15,11 @@ with open('mls_12_ping.out', 'r') as f:
 
 plt.title("Microflow controller: PING between H1 and H2")
 plt.xlabel("ICMP packet ID")
-plt.ylabel("RTT time")
+plt.ylabel("RTT time (ms)")
 
 axes = plt.gca()
-axes.set_ylim([0, 140])
-axes.set_xlim([0,100])
+axes.set_ylim([0, 70])
+axes.set_xlim([-2,100])
 
 plt.plot(ping_id, rtt)
 plt.savefig("mls_12_ping.png")
@@ -28,7 +27,6 @@ plt.savefig("mls_12_ping.png")
 """
 Plot throughput for different hard timeout values.
 iperf is used to measure the througput.
-"""
 
 plt.clf()
 
@@ -50,3 +48,5 @@ axes = plt.gca()
 
 plt.plot(timeouts, perf)
 plt.savefig("timeout.png")
+
+"""
