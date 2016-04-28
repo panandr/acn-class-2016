@@ -43,6 +43,8 @@ plt.title("Microflow controller: Throughput vs hard_timeout values for the rules
 plt.xlabel("hard_timeout for rules (sec)")
 plt.ylabel("Throughput (Gbps)")
 
+plt.grid()
+
 axes = plt.gca()
 #axes.set_ylim([0, 140])
 #axes.set_xlim([0,100])

@@ -33,10 +33,13 @@ with open('ping_1-5.out', 'r') as f:
 
 plt.title("Simple Hub: PING between H1 and H5")
 plt.xlabel("ICMP packet ID")
-plt.ylabel("RTT time")
+plt.ylabel("RTT time (ms)")
 
 axes = plt.gca()
 axes.set_ylim([0, 120])
 
+plt.grid()
+
 plt.plot(ping_id, rtt)
+
 plt.savefig("ping-h1-h5.png")
