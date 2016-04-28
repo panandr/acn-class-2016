@@ -34,6 +34,13 @@ H4 = "10.0.0.4"
 log = core.getLogger()
 GLOBAL_TIMEOUT = 1
 
+# This is our controller object. In our implementation there is only one Python Object responsible
+# for handling all related events.
+# The acn_controller handles PacketIn events from all connections, LinkEvents which denote if a link
+# is up or down.
+# Also our controller tracks for each switch the links and hosts connected to it, as well as wcich 
+# mac addresses reside behind each port.
+
 class acn_controller(object):
   
   def __init__(self):
@@ -57,6 +64,11 @@ class acn_controller(object):
     # port of the dpit that connects on.
     self.hosts = {}
 
+  # Tracks a host, specifically for ARM requests/replies
+  # if an host ip has never been observed it associates this 
+  # ip with the switch and the incoming port on the switch.
+  # If an ip has already been tracked in another switch then it
+  # does nothing. DOES NOT support host mobility
   def track_host(self, packet, packet_in, dpid):
     
     if packet.type == packet.ARP_TYPE:
@@ -357,11 +369,15 @@ def launch ():
   pox.log.launch(format="[@@@bold@@@level%(name)-22s@@@reset] " +
                         "@@@bold%(message)s@@@normal")
 
+  # boot up discovery module and spanning tree module
+  # used by our code
   pox.openflow.discovery.launch() 
   pox.openflow.spanning_tree.launch()
 
+  # create acn_controller object once
   acn = acn_controller()
 
+  # set up handlers for connection up and connection down
   def connection_added(event):
     acn.add_connection(event.connection)
   def connection_removed(event):

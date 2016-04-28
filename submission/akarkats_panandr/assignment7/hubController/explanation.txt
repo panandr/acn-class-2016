@@ -4,7 +4,7 @@ We boot up mininet with the command:
 	sudo mn --custom custom-topo.py --topo mytopo --controller remote
 
 a) We ran 'H1 ping -c 100 H2'.
-   On average of the 100 packets it takes 27.203 ms per RTT.
+   On average of the 100 packets it takes 29.179 ms per RTT.
    Because our controller makes the virtual switches act as simple hubs that just flood any receiving   packet, this ping alone results in traffic generated in all flow and switch interfaces. We executed the
    following command for the hosts (where h1 could be any host):
 
@@ -18,8 +18,8 @@ a) We ran 'H1 ping -c 100 H2'.
    packet.
 
 b) We ran 'H1 ping -c 100 H5'.
-   The average RTT now is 32.686 ms which is a bit larger than the first occasion since the hosts H1 and H2 are closer than H1 and H5. Again, the RTT is random since the controller floods every packet 
-   to all ports.
+   The average RTT now is 39.004 ms which is a bit larger than the first occasion since the hosts H1 and H2 are closer than H1 and H5. Again, the RTT is random since the controller floods every packet 
+   to all ports and we do not observe any specific traffic pattern.
 
 c) We then performed 'pingall'. The output is:
 
