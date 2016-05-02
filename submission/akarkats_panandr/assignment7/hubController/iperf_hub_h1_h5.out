@@ -1,20 +1,10 @@
-mininet> h1 iperf -c 10.0.0.5 -i 2 -t 20
-------------------------------------------------------------
-Client connecting to 10.0.0.5, TCP port 5001
-TCP window size: 85.3 KByte (default)
-------------------------------------------------------------
-[  3] local 10.0.0.1 port 52530 connected with 10.0.0.5 port 5001
-[ ID] Interval       Transfer     Bandwidth
-[  3]  0.0- 2.0 sec  1.62 MBytes  6.82 Mbits/sec
-[  3]  2.0- 4.0 sec  1.25 MBytes  5.24 Mbits/sec
-[  3]  4.0- 6.0 sec  1.50 MBytes  6.29 Mbits/sec
-[  3]  6.0- 8.0 sec  2.12 MBytes  8.91 Mbits/sec
-[  3]  8.0-10.0 sec  3.00 MBytes  12.6 Mbits/sec
-[  3] 10.0-12.0 sec  3.12 MBytes  13.1 Mbits/sec
-[  3] 12.0-14.0 sec  5.25 MBytes  22.0 Mbits/sec
-[  3] 14.0-16.0 sec  3.88 MBytes  16.3 Mbits/sec
-[  3] 16.0-18.0 sec  5.50 MBytes  23.1 Mbits/sec
-[  3] 18.0-20.0 sec  3.88 MBytes  16.3 Mbits/sec
-[  3] 20.0-22.0 sec  0.00 Bytes  0.00 bits/sec
-[  3]  0.0-22.2 sec  31.2 MBytes  11.8 Mbits/sec
-
+6.82
+5.24
+6.29
+8.91
+12.6
+13.1
+22.0
+16.3
+23.1
+16.3

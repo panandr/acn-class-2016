@@ -1,18 +1,10 @@
-net> h1 iperf -c 10.0.0.4 -i 2 -t 20
-------------------------------------------------------------
-Client connecting to 10.0.0.4, TCP port 5001
-TCP window size: 85.3 KByte (default)
-------------------------------------------------------------
-[  3] local 10.0.0.1 port 36079 connected with 10.0.0.4 port 5001
-[ ID] Interval       Transfer     Bandwidth
-[  3]  0.0- 2.0 sec  3.44 GBytes  14.8 Gbits/sec
-[  3]  2.0- 4.0 sec  3.96 GBytes  17.0 Gbits/sec
-[  3]  4.0- 6.0 sec  4.14 GBytes  17.8 Gbits/sec
-[  3]  6.0- 8.0 sec  3.93 GBytes  16.9 Gbits/sec
-[  3]  8.0-10.0 sec  4.03 GBytes  17.3 Gbits/sec
-[  3] 10.0-12.0 sec  3.38 GBytes  14.5 Gbits/sec
-[  3] 12.0-14.0 sec  2.92 GBytes  12.6 Gbits/sec
-[  3] 14.0-16.0 sec  3.45 GBytes  14.8 Gbits/sec
-[  3] 16.0-18.0 sec  4.13 GBytes  17.7 Gbits/sec
-[  3]  0.0-20.0 sec  37.5 GBytes  16.1 Gbits/sec
-
+14.8
+17.0
+17.8
+16.9
+17.3
+14.5
+12.6
+14.8
+17.7
+16.1
