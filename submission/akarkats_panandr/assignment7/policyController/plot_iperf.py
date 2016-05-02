@@ -21,8 +21,8 @@ plt.ylabel("Throughput (Mbits/s)")
 axes = plt.gca()
 axes.set_ylim([0, 30])
 
-line_1 = plt.plot(intervals, throughputs_h1_h3)
-line_2 = plt.plot(intervals, throughputs_h1_h4)
+line_1 = plt.plot(intervals, throughputs_h1_h3, "h1 -> h3")
+line_2 = plt.plot(intervals, throughputs_h1_h4, "h1 -> h4)
 
 plt.grid()
 plt.savefig("iperf_policy.png")
