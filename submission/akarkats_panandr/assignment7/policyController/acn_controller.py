@@ -370,10 +370,10 @@ class acn_controller(object):
   
     self.track_host(packet, packet_in, dpid)
 
-    self.simple_hub(dpid , packet, packet_in) 
+    # self.simple_hub(dpid , packet, packet_in) 
     # self.learning_controller(dpid, packet, packet_in) 
     # self.learning_microflow_controller(dpid, packet, packet_in)
-    # self.policy_controller(dpid, packet, packet_in)
+    self.policy_controller(dpid, packet, packet_in)
 
   # Called upon LinkEvent.
   # This could denot a link addition or removal.
