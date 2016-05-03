@@ -1,0 +1,168 @@
+Monitoring results for ping h1 h4 and ping h2 h4. At the interface connecting switch 3 with switch 2 we should only observe ECHO Requests. At the interface 
+connecting switch 3 and switch 2 we should only observe echo replies.
+
+We monitor traffic at switch S3 of the topology, there we should only ICMP echo requests from 10.0.0.1 to 10.0.0.4, and from 10.0.0.2 to 10.0.0.4
+
+mininet> s3 tcpdump -XX -n -i s3-eth2
+tcpdump: WARNING: s3-eth2: no IPv4 address assigned
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on s3-eth2, link-type EN10MB (Ethernet), capture size 65535 bytes
+07:33:06.962780 LLDP, length 27
+	0x0000:  0123 2000 0001 ea27 31ad bcf6 88cc 0207  .#.....'1.......
+	0x0010:  0764 7069 643a 3204 0202 3406 0200 780c  .dpid:2...4...x.
+	0x0020:  0664 7069 643a 3200 00                   .dpid:2..
+07:33:07.603440 IP 10.0.0.1 > 10.0.0.4: ICMP echo request, id 4827, seq 1, length 64
+	0x0000:  aedb 548d 14de 6e4c be12 64df 0800 4500  ..T...nL..d...E.
+	0x0010:  0054 71e9 4000 4001 b4bb 0a00 0001 0a00  .Tq.@.@.........
+	0x0020:  0004 0800 76a6 12db 0001 231f 2257 0000  ....v.....#."W..
+	0x0030:  0000 6134 0900 0000 0000 1011 1213 1415  ..a4............
+	0x0040:  1617 1819 1a1b 1c1d 1e1f 2021 2223 2425  ...........!"#$%
+	0x0050:  2627 2829 2a2b 2c2d 2e2f 3031 3233 3435  &'()*+,-./012345
+	0x0060:  3637                                     67
+07:33:08.040132 LLDP, length 27
+	0x0000:  0123 2000 0001 6e29 443e 2690 88cc 0207  .#....n)D>&.....
+	0x0010:  0764 7069 643a 3304 0202 3206 0200 780c  .dpid:3...2...x.
+	0x0020:  0664 7069 643a 3300 00                   .dpid:3..
+07:33:09.009469 IP 10.0.0.2 > 10.0.0.4: ICMP echo request, id 4830, seq 1, length 64
+	0x0000:  aedb 548d 14de 6ef6 3c71 66a9 0800 4500  ..T...n.<qf...E.
+	0x0010:  0054 71dc 4000 4001 b4c7 0a00 0002 0a00  .Tq.@.@.........
+	0x0020:  0004 0800 44b5 12de 0001 251f 2257 0000  ....D.....%."W..
+	0x0030:  0000 9a22 0000 0000 0000 1011 1213 1415  ..."............
+	0x0040:  1617 1819 1a1b 1c1d 1e1f 2021 2223 2425  ...........!"#$%
+	0x0050:  2627 2829 2a2b 2c2d 2e2f 3031 3233 3435  &'()*+,-./012345
+	0x0060:  3637                                     67
+
+Now we monitor traffic at switch s2 of the topology, at the interface connecting it to s1. There we should only observe the ECHO Replies of the pings
+
+mininet> s2 tcpdump -XX -n -i s2-eth3
+tcpdump: WARNING: s2-eth3: no IPv4 address assigned
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on s2-eth3, link-type EN10MB (Ethernet), capture size 65535 bytes
+07:34:45.180741 LLDP, length 27
+	0x0000:  0123 2000 0001 7e27 7a6f 4d00 88cc 0207  .#....~'zoM.....
+	0x0010:  0764 7069 643a 3204 0202 3306 0200 780c  .dpid:2...3...x.
+	0x0020:  0664 7069 643a 3200 00                   .dpid:2..
+07:34:47.206748 IP 10.0.0.4 > 10.0.0.1: ICMP echo reply, id 4852, seq 1, length 64
+	0x0000:  6e4c be12 64df aedb 548d 14de 0800 4500  nL..d...T.....E.
+	0x0010:  0054 0cbb 0000 4001 59ea 0a00 0004 0a00  .T....@.Y.......
+	0x0020:  0001 0000 f0a0 12f4 0001 871f 2257 0000  ............"W..
+	0x0030:  0000 9120 0300 0000 0000 1011 1213 1415  ................
+	0x0040:  1617 1819 1a1b 1c1d 1e1f 2021 2223 2425  ...........!"#$%
+	0x0050:  2627 2829 2a2b 2c2d 2e2f 3031 3233 3435  &'()*+,-./012345
+	0x0060:  3637                                     67
+07:34:48.339357 LLDP, length 27
+	0x0000:  0123 2000 0001 d2a4 d4c2 6fe5 88cc 0207  .#........o.....
+	0x0010:  0764 7069 643a 3104 0202 3306 0200 780c  .dpid:1...3...x.
+	0x0020:  0664 7069 643a 3100 00                   .dpid:1..
+07:34:49.293113 IP 10.0.0.4 > 10.0.0.2: ICMP echo reply, id 4855, seq 1, length 64
+	0x0000:  6ef6 3c71 66a9 aedb 548d 14de 0800 4500  n.<qf...T.....E.
+	0x0010:  0054 4977 0000 4001 1d2d 0a00 0004 0a00  .TIw..@..-......
+	0x0020:  0002 0000 8448 12f7 0001 891f 2257 0000  .....H......"W..
+	0x0030:  0000 fa75 0400 0000 0000 1011 1213 1415  ...u............
+	0x0040:  1617 1819 1a1b 1c1d 1e1f 2021 2223 2425  ...........!"#$%
+	0x0050:  2627 2829 2a2b 2c2d 2e2f 3031 3233 3435  &'()*+,-./012345
+	0x0060:  3637                                     67
+
+As we see the policies are enforced from our controller and the traffic from H4 to H1 or H2 does NOT pass from switch 3.
+
+Furthermore, we will ping H3 from H1 and H2 and we will observe the same interfaces, so as to see that all ICMP requests/replies pass from s1 and s2, and not from s3.
+
+The monitoring at s3 
+
+mininet> s3 tcpdump -XX -n -i s3-eth2
+tcpdump: WARNING: s3-eth2: no IPv4 address assigned
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on s3-eth2, link-type EN10MB (Ethernet), capture size 65535 bytes
+07:37:55.534933 LLDP, length 27
+	0x0000:  0123 2000 0001 ea27 31ad bcf6 88cc 0207  .#.....'1.......
+	0x0010:  0764 7069 643a 3204 0202 3406 0200 780c  .dpid:2...4...x.
+	0x0020:  0664 7069 643a 3200 00                   .dpid:2..
+07:37:56.606461 LLDP, length 27
+	0x0000:  0123 2000 0001 6e29 443e 2690 88cc 0207  .#....n)D>&.....
+	0x0010:  0764 7069 643a 3304 0202 3206 0200 780c  .dpid:3...2...x.
+	0x0020:  0664 7069 643a 3300 00                   .dpid:3..
+
+Now we monitor s2 interface that connects switch 2 to switch 1 and there we should observe all the echo requests and replies.
+
+The monitoring at s2
+
+mininet> s2 tcpdump -XX -n -i s2-eth3
+tcpdump: WARNING: s2-eth3: no IPv4 address assigned
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on s2-eth3, link-type EN10MB (Ethernet), capture size 65535 bytes
+07:38:56.960475 LLDP, length 27
+	0x0000:  0123 2000 0001 7e27 7a6f 4d00 88cc 0207  .#....~'zoM.....
+	0x0010:  0764 7069 643a 3204 0202 3306 0200 780c  .dpid:2...3...x.
+	0x0020:  0664 7069 643a 3200 00                   .dpid:2..
+07:38:58.374244 IP 10.0.0.1 > 10.0.0.3: ICMP echo request, id 4922, seq 1, length 64
+	0x0000:  0acf 001a 7f79 6e4c be12 64df 0800 4500  .....ynL..d...E.
+	0x0010:  0054 5d68 4000 4001 c93d 0a00 0001 0a00  .T]h@.@..=......
+	0x0020:  0003 0800 3dc6 133a 0001 8220 2257 0000  ....=..:...."W..
+	0x0030:  0000 3eb4 0500 0000 0000 1011 1213 1415  ..>.............
+	0x0040:  1617 1819 1a1b 1c1d 1e1f 2021 2223 2425  ...........!"#$%
+	0x0050:  2627 2829 2a2b 2c2d 2e2f 3031 3233 3435  &'()*+,-./012345
+	0x0060:  3637                                     67
+07:38:58.374797 IP 10.0.0.3 > 10.0.0.1: ICMP echo reply, id 4922, seq 1, length 64
+	0x0000:  6e4c be12 64df 0acf 001a 7f79 0800 4500  nL..d......y..E.
+	0x0010:  0054 0caa 0000 4001 59fc 0a00 0003 0a00  .T....@.Y.......
+	0x0020:  0001 0000 45c6 133a 0001 8220 2257 0000  ....E..:...."W..
+	0x0030:  0000 3eb4 0500 0000 0000 1011 1213 1415  ..>.............
+	0x0040:  1617 1819 1a1b 1c1d 1e1f 2021 2223 2425  ...........!"#$%
+	0x0050:  2627 2829 2a2b 2c2d 2e2f 3031 3233 3435  &'()*+,-./012345
+	0x0060:  3637                                     67
+07:39:00.147867 LLDP, length 27
+	0x0000:  0123 2000 0001 d2a4 d4c2 6fe5 88cc 0207  .#........o.....
+	0x0010:  0764 7069 643a 3104 0202 3306 0200 780c  .dpid:1...3...x.
+	0x0020:  0664 7069 643a 3100 00                   .dpid:1..
+07:39:00.946358 IP 10.0.0.2 > 10.0.0.3: ICMP echo request, id 4925, seq 1, length 64
+	0x0000:  0acf 001a 7f79 6ef6 3c71 66a9 0800 4500  .....yn.<qf...E.
+	0x0010:  0054 5d66 4000 4001 c93e 0a00 0002 0a00  .T]f@.@..>......
+	0x0020:  0003 0800 5a07 133d 0001 8420 2257 0000  ....Z..=...."W..
+	0x0030:  0000 1770 0e00 0000 0000 1011 1213 1415  ...p............
+	0x0040:  1617 1819 1a1b 1c1d 1e1f 2021 2223 2425  ...........!"#$%
+	0x0050:  2627 2829 2a2b 2c2d 2e2f 3031 3233 3435  &'()*+,-./012345
+	0x0060:  3637                                     67
+07:39:00.946529 IP 10.0.0.3 > 10.0.0.2: ICMP echo reply, id 4925, seq 1, length 64
+	0x0000:  6ef6 3c71 66a9 0acf 001a 7f79 0800 4500  n.<qf......y..E.
+	0x0010:  0054 4971 0000 4001 1d34 0a00 0003 0a00  .TIq..@..4......
+	0x0020:  0002 0000 6207 133d 0001 8420 2257 0000  ....b..=...."W..
+	0x0030:  0000 1770 0e00 0000 0000 1011 1213 1415  ...p............
+	0x0040:  1617 1819 1a1b 1c1d 1e1f 2021 2223 2425  ...........!"#$%
+	0x0050:  2627 2829 2a2b 2c2d 2e2f 3031 3233 3435  &'()*+,-./012345
+	0x0060:  3637                                     67
+
+We can see that all the traffic between H1 or H2 destined to H3 follows the shortest path in the topology.
+
+Finally, we perform the pingall command in mininet and dump all the flows of the switches, we grep the command so as to
+observe only flows relevant with ip traffic, on which we enforce the policies :
+
+mininet> dpctl dump-flows | grep ip
+*** s1 ------------------------------------------------------------------------
+ cookie=0x0, duration=588.067s, table=0, n_packets=16, n_bytes=1568, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,nw_src=10.0.0.2,nw_dst=10.0.0.4 actions=output:4
+ cookie=0x0, duration=241.978s, table=0, n_packets=7, n_bytes=686, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=3,nw_src=10.0.0.3,nw_dst=10.0.0.1 actions=output:1
+ cookie=0x0, duration=242.121s, table=0, n_packets=7, n_bytes=686, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,nw_src=10.0.0.1,nw_dst=10.0.0.3 actions=output:3
+ cookie=0x0, duration=91.764s, table=0, n_packets=3, n_bytes=294, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,nw_src=10.0.0.1,nw_dst=10.0.0.2 actions=output:2
+ cookie=0x0, duration=91.542s, table=0, n_packets=3, n_bytes=294, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=3,nw_src=10.0.0.4,nw_dst=10.0.0.1 actions=output:1
+ cookie=0x0, duration=91.68s, table=0, n_packets=3, n_bytes=294, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,nw_src=10.0.0.1,nw_dst=10.0.0.4 actions=output:4
+ cookie=0x0, duration=588.002s, table=0, n_packets=16, n_bytes=1568, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=3,nw_src=10.0.0.4,nw_dst=10.0.0.2 actions=output:2
+ cookie=0x0, duration=91.732s, table=0, n_packets=3, n_bytes=294, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,nw_src=10.0.0.2,nw_dst=10.0.0.1 actions=output:1
+ cookie=0x0, duration=217.828s, table=0, n_packets=5, n_bytes=490, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,nw_src=10.0.0.2,nw_dst=10.0.0.3 actions=output:3
+ cookie=0x0, duration=217.688s, table=0, n_packets=5, n_bytes=490, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=3,nw_src=10.0.0.3,nw_dst=10.0.0.2 actions=output:2
+*** s2 ------------------------------------------------------------------------
+ cookie=0x0, duration=91.441s, table=0, n_packets=3, n_bytes=294, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,nw_src=10.0.0.3,nw_dst=10.0.0.4 actions=output:2
+ cookie=0x0, duration=91.62s, table=0, n_packets=3, n_bytes=294, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=4,nw_src=10.0.0.1,nw_dst=10.0.0.4 actions=output:2
+ cookie=0x0, duration=91.618s, table=0, n_packets=3, n_bytes=294, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,nw_src=10.0.0.4,nw_dst=10.0.0.1 actions=output:3
+ cookie=0x0, duration=242.058s, table=0, n_packets=7, n_bytes=686, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=3,nw_src=10.0.0.1,nw_dst=10.0.0.3 actions=output:1
+ cookie=0x0, duration=588.061s, table=0, n_packets=16, n_bytes=1568, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,nw_src=10.0.0.4,nw_dst=10.0.0.2 actions=output:3
+ cookie=0x0, duration=242.054s, table=0, n_packets=7, n_bytes=686, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,nw_src=10.0.0.3,nw_dst=10.0.0.1 actions=output:3
+ cookie=0x0, duration=217.833s, table=0, n_packets=5, n_bytes=490, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=3,nw_src=10.0.0.2,nw_dst=10.0.0.3 actions=output:1
+ cookie=0x0, duration=91.411s, table=0, n_packets=3, n_bytes=294, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=2,nw_src=10.0.0.4,nw_dst=10.0.0.3 actions=output:1
+ cookie=0x0, duration=588.063s, table=0, n_packets=16, n_bytes=1568, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=4,nw_src=10.0.0.2,nw_dst=10.0.0.4 actions=output:2
+ cookie=0x0, duration=217.767s, table=0, n_packets=5, n_bytes=490, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,nw_src=10.0.0.3,nw_dst=10.0.0.2 actions=output:3
+*** s3 ------------------------------------------------------------------------
+ cookie=0x0, duration=91.631s, table=0, n_packets=3, n_bytes=294, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,nw_src=10.0.0.1,nw_dst=10.0.0.4 actions=output:2
+ cookie=0x0, duration=588.074s, table=0, n_packets=16, n_bytes=1568, hard_timeout=1000, idle_age=2, priority=1,ip,in_port=1,nw_src=10.0.0.2,nw_dst=10.0.0.4 actions=output:2
+
+We can clearly see that at switch s3 there exist rules that only forward IP traffic with src = [10.0.0.1, 10.0.0.2] to dst = 10.0.0.4 towards the port 2 of the switch, which 
+is connected to s2.
+

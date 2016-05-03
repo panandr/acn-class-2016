@@ -1,4 +1,3 @@
-# Copyright 2012 James McCauley
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -46,6 +45,8 @@ class acn_controller(object):
   def __init__(self):
     log.info("Initializing acn controller. Registering listeners for discovery module!")
 
+    # add listeners for LinkEvent published by the
+    # openflow_discovery module.
     core.openflow_discovery.addListeners(self)
 
     # dictionary that keeps connection/links/hosts/mac_to_port
@@ -69,6 +70,7 @@ class acn_controller(object):
   # ip with the switch and the incoming port on the switch.
   # If an ip has already been tracked in another switch then it
   # does nothing. DOES NOT support host mobility
+  # It only looks arp packets, request or replies.
   def track_host(self, packet, packet_in, dpid):
     
     if packet.type == packet.ARP_TYPE:
@@ -82,7 +84,10 @@ class acn_controller(object):
     
     return
      
-  
+  # Installs an IP policy on specific switch. Connection is the 
+  # connection object created upon each new ConnectionUp event
+  # which is stored in our controller.
+  # Rules installed match in_port, src_ip, dst_ip --> out_port
   def install_ip_policy(self, connection, dpid, priority, in_port, src_ip, dst_ip, out_port, timeout):
     
     msg = of.ofp_flow_mod()
@@ -96,7 +101,10 @@ class acn_controller(object):
 
     connection.send(msg)
 
-
+  # Installs a layer-2 based rule on a switch. Connection is the 
+  # connection object created upon each new ConnectionUp event
+  # and is stored into our controller.
+  # Installed rules match in_port, source mac, destination mac, protocol type (ARP/IP/..) -> out_port
   def install_rule( self, connection, priority, src_port, src_mac, dst_mac, out_port, timeout, dl_type):
     log.debug("Switch-{}: Installing rule src:{} , src_port {}, dst {} -> dst_port {}".
               format( connection.dpid, src_mac, src_port, dst_mac, out_port))
@@ -112,13 +120,10 @@ class acn_controller(object):
     msg.actions.append( of.ofp_action_output( port = out_port))
     connection.send(msg)
 
-
+  # Resends a packet that a switch has 
+  # sent to controller to an output port.
   def resend_packet (self, conn, packet_in, out_port):
-    """
-    Instructs the switch to resend a packet that it had sent to us.
-    "packet_in" is the ofp_packet_in object the switch had sent to the
-    controller due to a table-miss.
-    """
+
     msg = of.ofp_packet_out()
     msg.data = packet_in
 
@@ -128,11 +133,21 @@ class acn_controller(object):
 
     # Send message to switch
     conn.send(msg)
-  
+
+  # Floods a packet with OFPP_FLOOD  
   def flood(self, connection, packet, packet_in):
     
     self.resend_packet(connection, packet_in, of.OFPP_FLOOD)  
 
+  # Policy controller that implements Question 4.3
+  # Our controler works with the topology of figure 2
+  # and works without fixed mac addresses or datapath ids.
+  # We implement the policies as described in the assignments.
+  # Our Implementation enforces policies ONLY on IP traffic
+  # and not layer-2 only traffic like ARP (etc).
+  # Basically, for each incoming packet we need to figure out the 
+  # output port by inspecting the whole topology (links, hosts)
+  # That our controller is aware of.
   def policy_controller(self, dpid, packet, packet_in):
   
     connection = self.dpid_dict[dpid]["connection"]
@@ -231,6 +246,10 @@ class acn_controller(object):
     else:
       self.learning_microflow_controller(dpid, packet, packet_in)
     
+  # Implements the microflow learning controller of 4.2.3 question.
+  # Specifically, we install flow rules on switches related to 
+  # src mac, dest mac, in-port AND protocol used (arp/ipv6/ip etc)
+  #
   def  learning_microflow_controller(self, dpid, packet, packet_in):
     
     connection = self.dpid_dict[dpid]["connection"]
@@ -267,7 +286,10 @@ class acn_controller(object):
 
     return
 
-
+  # Implementation of the learning controller.
+  # If destination mac is in the dictionary of port-mac
+  # of a specific switch then forward it to a specific
+  # port otherwise flood it to all ports.
   def learning_controller(self, dpid, packet, packet_in):
           
     connection = self.dpid_dict[dpid]["connection"]
@@ -297,13 +319,19 @@ class acn_controller(object):
         self.flood_packet(connection, packet, packet_in)
 
     return
-
+  
+  # Upon receiving a packet from a switch,
+  # flood it to all ports except the port 
+  # that it originated from
   def simple_hub(self, dpid, packet, packet_in):
 	     
     connection = self.dpid_dict[dpid]["connection"]
     
     self.flood(connection, packet, packet_in);
 
+  # Called upon each new ConnectionUp event.
+  # It initializes a new switch it the switch dictionary
+  # which we identify by the dpid.
   def add_connection(self, conn):
     
     dpid_joined = conn.dpid
@@ -318,6 +346,10 @@ class acn_controller(object):
     self.dpid_dict[dpid_joined].update({"links" : []})
     self.dpid_dict[dpid_joined].update({"hosts" : []})
 
+  # Called upon a ConnectionDown event.
+  # It removes a switch from the dictionary and 
+  # clears all book-keeping for this specific 
+  # switch AND the hosts connected to it.
   def remove_connection(self, conn):
 
     dpid_removed = conn.dpid
@@ -326,6 +358,8 @@ class acn_controller(object):
     self.dpid_dict.pop( dpid_removed , None)
     self.hosts = {k: v for k, v in self.hosts.iteritems() if v[0] != dpid_removed}
 
+  # Called upon PacketIn events.
+  # It calls the specific controller implementation.
   def _handle_PacketIn (self, event):
   
     packet = event.parsed
@@ -336,11 +370,15 @@ class acn_controller(object):
   
     self.track_host(packet, packet_in, dpid)
 
-    # self.simple_hub(dpid , packet, packet_in) 
+    self.simple_hub(dpid , packet, packet_in) 
     # self.learning_controller(dpid, packet, packet_in) 
     # self.learning_microflow_controller(dpid, packet, packet_in)
-    self.policy_controller(dpid, packet, packet_in)
+    # self.policy_controller(dpid, packet, packet_in)
 
+  # Called upon LinkEvent.
+  # This could denot a link addition or removal.
+  # In addition we keep this link for switches used by it
+  # and other bookkeeping information at our per-switch dictionary.
   def _handle_LinkEvent (self, event):
     
     link = event.link
@@ -356,6 +394,7 @@ class acn_controller(object):
     else:
       log.debug("Link removed for switches S-{}:port-{} --> S-{}:port-{}".format(dpid_source, port_source, dpid_dest, port_dest))
 
+  # unused.
   def _handle_HostEvent (self, event):
     return;   
 
@@ -370,7 +409,10 @@ def launch ():
                         "@@@bold%(message)s@@@normal")
 
   # boot up discovery module and spanning tree module
-  # used by our code
+  # used by our code. discovery module will provide
+  # us with link events, spanning tree module will build a spanning 
+  # tree of our topology and disable ports that do not belong to it 
+  # on our switches.
   pox.openflow.discovery.launch() 
   pox.openflow.spanning_tree.launch()
 
@@ -383,6 +425,7 @@ def launch ():
   def connection_removed(event):
     acn.remove_connection(event.connection)
 
+  # set up the handlers
   core.openflow.addListenerByName("ConnectionUp", connection_added)
   core.openflow.addListenerByName("ConnectionDown", connection_removed)
 

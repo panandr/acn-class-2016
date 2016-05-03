@@ -1,0 +1,31 @@
+In this part we implemented a policy controller. The policies enforced are the ones asked in 4.3 : 
+
+a) H1 H4 SW3
+b) H2 H4 SW3
+
+Our implementation enforces the policy for the IP Traffic between these hosts. Other kind of traffic (like ARP) are handles by the learning switch implementation of our microflow controller. 
+In order for our implementation to work we only need to have fixed IP addresses for all the hosts participating like:
+
+H1 - 10.0.0.1
+H2 - 10.0.0.2
+H3 - 10.0.0.3
+H4 - 10.0.0.4
+
+The code can work for different datapath-ids and different mac addresses of the hosts. You can see the code for a better explanation of the logic.
+
+In order to check that our policies are enforced between the hosts we will ping between various pairs of hosts while monitoring the intefaces at the switches with tcpdump, and also, we 
+will dump the flows of the switches for each ping.
+
+The results of the tcpdump commands and the dump-flow commands that prove that our policies are enforced are in the output.log.
+
+We also run a 30 sec iperf tests with varying timeout as before so as to see the impact of hard timeouts on our implementation. We measure throughput between 
+
+H1 -> H4 
+
+and 
+
+H1 -> H3.
+
+
+Again, it is obvious that for higher timeouts the throughput is higher, as in the plots before. We should note again that the measurements vay a lot due to the un-predicted execution
+of the VM and the emulator in the VM. 
