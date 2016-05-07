@@ -25,6 +25,8 @@ import pox.log.color
 import pox.log
 import sys
 
+import networkx
+
 H1 = "10.0.0.1"
 H2 = "10.0.0.2"
 H3 = "10.0.0.3"
@@ -65,7 +67,32 @@ class acn_controller(object):
     # port of the dpit that connects on.
     self.hosts = {}
 
-  # Tracks a host, specifically for ARM requests/replies
+    # contains the implemented policies for the controller
+    # Policies are of the form: 
+    # (src_ip, dest_ip, dpid)
+    # where: src_ip: The source host IP
+    #        dst_ip: The destination host IP
+    #        dpid  : The dpid of the switch the traffic has to pass through
+    # 
+    # The dictionary maps a hash (src_ip, dst_ip) to the dpid of the switch
+    self.policies = {}
+
+    # Network graph
+    self.graph = nx.graph()
+
+
+  # Parses policies from files and returns a dictionary as described above
+    with open('policies.txt', 'r') as f:
+      for line in f:
+          if line[0] == '#' or line.strip() == '':
+            continue
+          src_ip, dst_ip, dpid = line.split()
+          print("Parsed policy {} -> {} via {}".format(src_ip, dst_ip, dpid))
+          m = hashlib.md5()
+          m.update(src_ip + dst_ip.toStr)
+          self.policies[m.digest()] = dpid
+    
+  # Tracks a host, specifically for ARP requests/replies
   # if an host ip has never been observed it associates this 
   # ip with the switch and the incoming port on the switch.
   # If an ip has already been tracked in another switch then it
@@ -153,6 +180,7 @@ class acn_controller(object):
     connection = self.dpid_dict[dpid]["connection"]
     mac_to_port = self.dpid_dict[dpid]["mac_to_port"]
 
+
     # if protocol is IP then implement policies 
     # for all other traffic etc. ARP implement l2 switch
     if packet.type == packet.IP_TYPE: 
@@ -165,85 +193,17 @@ class acn_controller(object):
       links = self.dpid_dict[dpid]["links"]
 
       log.debug("Received IP packet from {} to {}, implementing policy!".format(src_ip, dst_ip))
-     
-      # implementing H1 H4 s3, H2 H4 s3 
-      if (H1 == src_ip.toStr() or H2 == src_ip.toStr()) and H4 == dst_ip:
-
-        log.debug("Implement policy from {} to {}. Should pass from upper switch".format(src_ip, dst_ip)) 
-        
-        # Can only infer switch identity only for hosts connected to us :(
-        # if we are S1 install rule to send to S3 (switch with no hosts)
-        if H1 in hosts or H2 in hosts:
- 	  log.debug("In S1!")
-            
-          # should pass from S3, find link which dpid has no hosts :) 
-          for link in links:
-            next_dpid = link.dpid2
-            own_port  = link.port1
-            # check if link dictionary is empty for this dpid, if yes it is the right switch (S3)
-            if not self.dpid_dict[next_dpid]["hosts"]:
-              break
-
-          log.debug("Installing flow at S1 for S3!")           
-          self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, GLOBAL_TIMEOUT)
-	  self.resend_packet( connection, packet_in, own_port)
-
-        # if we are S2 install rule to send directly to H4  
-        elif H3 in hosts or H4 in hosts:
-          log.debug("In S2!")
-          
-          # retrieve host data from hosts dictionary  
-          dpid, own_port = self.hosts[dst_ip]
-
-          log.debug("Installing rule and forwarding data to host!") 
-          self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, GLOBAL_TIMEOUT)
-	  self.resend_packet( connection, packet_in, own_port)
-
-        # if we are S3 install rule to send to S2 (switch with hosts H3,H4)
-        else:
-          log.debug("In S3!")
-
-          for link in links:
-            next_dpid = link.dpid2
-            own_port  = link.port1
-            # check if link dictionary is empty for this dpid, if yes it is the right switch (S3)
-            if H3 in self.dpid_dict[next_dpid]["hosts"] or H4 in self.dpid_dict[next_dpid]["hosts"]:
-              break
-
-          log.debug("Installing flow for host!")           
-          self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, GLOBAL_TIMEOUT)
-	  self.resend_packet( connection, packet_in, own_port)
-           
-      else:
-        if H1 in hosts or H2 in hosts:
-          log.debug("In S1")
-        elif H3 in hosts or H4 in hosts:
-          log.debug("In S2")
-        else:
-          log.debug("In S3") 
-
-        # if dst_ip is connected to switch forward to host and install rule
-        if dst_ip.toStr() in hosts: 
-           dpid, own_port = self.hosts[dst_ip]
-           
-           log.debug("Installing rule and forwarding data to host!") 
-           self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, GLOBAL_TIMEOUT)
- 	   self.resend_packet( connection, packet_in, own_port)
-	else:
-          
-          # find dpid which host is connected to, from links to us
-          for link in links:
-            next_dpid = link.dpid2
-            own_port  = link.port1
-           
-            # check in dpid connected to us if dst_ip is conencted to it, if yes install rule and forward
-            if dst_ip.toStr() in self.dpid_dict[next_dpid]["hosts"]:
-              break
  
-          log.debug("Installing flow for host!")           
-          self.install_ip_policy( connection, dpid, 1, packet_in.in_port, src_ip, dst_ip, own_port, GLOBAL_TIMEOUT)
-	  self.resend_packet( connection, packet_in, own_port)
+      # Check to see if we have to apply policy
+      m = hashlib.md5()
+      m.update(src_ip.toStr() + dst_ip.toStr())
+      if m.digest() in self.policies:
+        print("Have to implement policy from {} to {} through switch {}".format(src_ip.toStr(), dst_ip).toStr(), dpid)
+      else:
+        print("Have to use shortest path!")
+        
     else:
+      # Packet is not IP
       self.learning_microflow_controller(dpid, packet, packet_in)
     
   # Implements the microflow learning controller of 4.2.3 question.
@@ -370,10 +330,10 @@ class acn_controller(object):
   
     self.track_host(packet, packet_in, dpid)
 
-    self.simple_hub(dpid , packet, packet_in) 
+    # self.simple_hub(dpid , packet, packet_in) 
     # self.learning_controller(dpid, packet, packet_in) 
     # self.learning_microflow_controller(dpid, packet, packet_in)
-    # self.policy_controller(dpid, packet, packet_in)
+    self.policy_controller(dpid, packet, packet_in)
 
   # Called upon LinkEvent.
   # This could denot a link addition or removal.
