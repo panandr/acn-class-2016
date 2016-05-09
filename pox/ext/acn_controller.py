@@ -25,12 +25,7 @@ import pox.log.color
 import pox.log
 import sys
 
-import networkx
-
-H1 = "10.0.0.1"
-H2 = "10.0.0.2"
-H3 = "10.0.0.3"
-H4 = "10.0.0.4"
+import networkx as nx
 
 log = core.getLogger()
 GLOBAL_TIMEOUT = 10
@@ -78,19 +73,17 @@ class acn_controller(object):
     self.policies = {}
 
     # Network graph
-    self.graph = nx.graph()
-
+    self.graph = nx.Graph()
 
   # Parses policies from files and returns a dictionary as described above
+  # Sanity is assumed regarding the contents of the file (no checks currently)
     with open('policies.txt', 'r') as f:
       for line in f:
           if line[0] == '#' or line.strip() == '':
             continue
           src_ip, dst_ip, dpid = line.split()
           print("Parsed policy {} -> {} via {}".format(src_ip, dst_ip, dpid))
-          m = hashlib.md5()
-          m.update(src_ip + dst_ip.toStr)
-          self.policies[m.digest()] = dpid
+          self.policies[(src_ip, dst_ip)] = int(dpid)
     
   # Tracks a host, specifically for ARP requests/replies
   # if an host ip has never been observed it associates this 
@@ -192,16 +185,56 @@ class acn_controller(object):
       hosts = self.dpid_dict[dpid]["hosts"]
       links = self.dpid_dict[dpid]["links"]
 
-      log.debug("Received IP packet from {} to {}, implementing policy!".format(src_ip, dst_ip))
- 
+      chosen_path = []
+      src_switch, src_port = self.hosts[src_ip]
+      dst_switch, dst_port = self.hosts[dst_ip]
+      
+
       # Check to see if we have to apply policy
-      m = hashlib.md5()
-      m.update(src_ip.toStr() + dst_ip.toStr())
-      if m.digest() in self.policies:
-        print("Have to implement policy from {} to {} through switch {}".format(src_ip.toStr(), dst_ip).toStr(), dpid)
+      if (src_ip.toStr(), dst_ip.toStr()) in self.policies:
+        policy_dpid = self.policies[src_ip.toStr(), dst_ip.toStr()]
+        print("Have to implement policy from {} to {} through switch {}".format(src_ip.toStr(), dst_ip.toStr(), policy_dpid))
+       
+        # Get all simple paths between the switches connected to the hosts
+        simple_paths = nx.all_simple_paths(self.graph, src_switch, dst_switch)
+        for simple_path in simple_paths:
+          if policy_dpid in simple_path:
+            chosen_path = simple_path
+            break
+
+        if chosen_path == []:
+          print("Could not satisfy policy")     
       else:
         print("Have to use shortest path!")
+        chosen_path = nx.shortest_path(self.graph, src_switch, dst_switch)
+
+      print("Will use path:")
+      print(chosen_path)
+
+      chosen_edges = [(chosen_path[i], chosen_path[i+1]) for i in xrange(0, len(chosen_path) - 1)]
+ 
+      edge_path = []
+      switch_order = chosen_path
+      for edge in chosen_edges:
+        port1= self.graph[edge[0]][edge[1]]['ports'][edge[0]]
+        port2= self.graph[edge[0]][edge[1]]['ports'][edge[1]]
+        edge_path.append((port1, port2))
         
+      edge_path.insert(0, (1, src_port))
+      edge_path.append((dst_port, 1))
+
+      # print(edge_path)
+
+      # Install IP rules for all the switches in the path
+      for i in xrange(0, len(edge_path)-1):
+        switch_dpid = switch_order[i]
+        switch_connection = self.dpid_dict[switch_dpid]["connection"]
+        src_port, dst_port = (edge_path[i][1], edge_path[i+1][0])
+        print("Installing policy on switch {}. {} -> {} with ports {} -> {}".format(switch_dpid, src_ip, dst_ip, src_port, dst_port))
+        self.install_ip_policy(switch_connection, switch_dpid, 1000, src_port, src_ip, dst_ip, dst_port, 1000)
+        #self.install_ip_policy(connection, switch_dpid, 1000, dst_port, dst_ip, src_ip, src_port, 1000)
+
+
     else:
       # Packet is not IP
       self.learning_microflow_controller(dpid, packet, packet_in)
@@ -349,8 +382,14 @@ class acn_controller(object):
     port_dest = link.port2
 
     if event.added:
-      log.debug("Link added for switches S-{}:port-{} --> S-{}:port-{}".format(dpid_source, port_source, dpid_dest, port_dest))
-      self.dpid_dict[dpid_source]["links"].append(link)    
+      log.info("Link added for switches S-{}:port-{} --> S-{}:port-{}".format(dpid_source, port_source, dpid_dest, port_dest))
+      self.dpid_dict[dpid_source]["links"].append(link)
+
+      # Update our graph with new nodes/edges
+      self.graph.add_edge(dpid_source, dpid_dest, ports = {dpid_source : port_source, dpid_dest : port_dest})
+      print("Graph Edges")
+      print(self.graph.edges())
+ 
     else:
       log.debug("Link removed for switches S-{}:port-{} --> S-{}:port-{}".format(dpid_source, port_source, dpid_dest, port_dest))
 
