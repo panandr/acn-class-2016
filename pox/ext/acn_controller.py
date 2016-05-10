@@ -234,7 +234,7 @@ class acn_controller(object):
         self.install_ip_policy(switch_connection, switch_dpid, 1000, src_port, src_ip, dst_ip, dst_port, 1000)
         #self.install_ip_policy(connection, switch_dpid, 1000, dst_port, dst_ip, src_ip, src_port, 1000)
 
-
+      self.resend_packet(connection, packet_in, edge_path[1][0])
     else:
       # Packet is not IP
       self.learning_microflow_controller(dpid, packet, packet_in)
