@@ -6,11 +6,11 @@ throughputs_h1_h3 = []
 throughputs_h1_h4 = []
 
 
-with open('iperf_policy_h1_h3.out', 'r') as f:
+with open('iperf_gen_h1_h3.out', 'r') as f:
     for line in f:
         throughputs_h1_h3.append(line)
 
-with open('iperf_policy_h1_h4.out', 'r') as f:
+with open('iperf_gen_h1_h4.out', 'r') as f:
     for line in f:
         throughputs_h1_h4.append(line)
 
@@ -26,6 +26,6 @@ line_2 = plt.plot(intervals, throughputs_h1_h4, label = "h1 -> h4")
 
 plt.grid()
 plt.legend(loc='lower right')
-plt.savefig("iperf_policy.png")
+plt.savefig("gen_iperf_policy.png")
 
 plt.show()
