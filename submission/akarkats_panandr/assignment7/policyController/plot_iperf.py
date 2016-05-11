@@ -16,7 +16,7 @@ with open('iperf_policy_h1_h4.out', 'r') as f:
 
 plt.title("Policy controller: Throughput")
 plt.xlabel("Interval (sec)")
-plt.ylabel("Throughput (Mbits/s)")
+plt.ylabel("Throughput (Gbits/s)")
 
 axes = plt.gca()
 axes.set_ylim([0, 30])

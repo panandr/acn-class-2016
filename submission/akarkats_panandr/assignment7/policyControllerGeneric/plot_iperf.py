@@ -16,10 +16,10 @@ with open('iperf_gen_h1_h4.out', 'r') as f:
 
 plt.title("Policy controller: Throughput")
 plt.xlabel("Interval (sec)")
-plt.ylabel("Throughput (Mbits/s)")
+plt.ylabel("Throughput (Gbits/s)")
 
 axes = plt.gca()
-axes.set_ylim([0, 30])
+axes.set_ylim([0, 50])
 
 line_1 = plt.plot(intervals, throughputs_h1_h3, label = "h1 -> h3")
 line_2 = plt.plot(intervals, throughputs_h1_h4, label = "h1 -> h4")
