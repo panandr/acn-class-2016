@@ -1,4 +1,4 @@
-For this part we implemented a generic policy controller meaning that can accept any arbitrary policies for a specified topology.
+For this part we implemented a generic policy controller meaning that can accept any arbitrary policies for a mininet specified topology.
 
 Policies are given in the file "policies.txt". Each policy contains the source and destination host IPs and one switch that the traffic has to go through. Input sanity is assumed.
 
