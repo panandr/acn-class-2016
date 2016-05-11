@@ -1,10 +1,10 @@
-For this part we implemented a generic policy controller meaning that can accept any arbitrary policies for a mininet specified topology.
+For this part we implemented a generic policy controller meaning that can accept any arbitrary policies for a mininet specified topology. Our code can work with any arbitary topology.
 
-Policies are given in the file "policies.txt". Each policy contains the source and destination host IPs and one switch that the traffic has to go through. Input sanity is assumed.
+Policies are given in the file "policies.txt". Each policy contains the source and destination host IPs and the datapath-id of one switch that the traffic has to go through. Input sanity is assumed. 
 
-Our implementation enforces the policy for the IP Traffic between these hosts. Other kind of traffic (like ARP) are handles by the learning switch implementation of our microflow controller. 
+Our implementation enforces the policy for the IP Traffic between these hosts. Other kind of traffic (like ARP) are handled by the learning switch implementation of our microflow controller. 
 
-The code can work for different datapath-ids and different mac addresses of the hosts. The only thing that has to be configured are the host IPs. These can be easily configured in the mininet topology file.
+The code can work for different datapath-ids and different mac addresses of the hosts. The only thing that has to be configured are the host IPs. These can be easily configured in the mininet topology file. Ofcourse, the datapath-ids contained in the policies must exist.
 
 As far as the policy enforcement is concerned our controller checks the source and destination IP address of the first unknown packet and:
 - If the policy has to be enforced a path passing through the desired switch is chosen at random and the respective rules are installed on all the switches on the path.
@@ -18,3 +18,4 @@ will dump the flows of the switches for each ping.
 
 The results of the tcpdump commands and the dump-flow commands that prove that our policies are enforced are in the output.log.
 
+More analytic results can be found on the policyController, which implements the topology and policies of the exercise.
