@@ -1,0 +1,176 @@
+This log file follows a similar logic to the policyController one.
+For consistency, we ran our experiments with the same topology and policies (file: "policies.txt")  as before.
+
+Monitoring results for ping h1 h4 and ping h2 h4. At the interface connecting switch 3 with switch 2 we should only observe ECHO Requests. At the interface 
+connecting switch 3 and switch 2 we should only observe echo replies.
+
+We monitor traffic at switch S3 of the topology, there we should only ICMP echo requests from 10.0.0.1 to 10.0.0.4, and from 10.0.0.2 to 10.0.0.4
+
+mininet> s3 tcpdump -XX -n -i s3-eth2 -v icmp
+tcpdump: WARNING: s3-eth2: no IPv4 address assigned
+tcpdump: listening on s3-eth2, link-type EN10MB (Ethernet), capture size 65535 bytes
+11:39:48.924723 IP (tos 0x0, ttl 64, id 29144, offset 0, flags [DF], proto ICMP (1), length 84)
+    10.0.0.1 > 10.0.0.4: ICMP echo request, id 7736, seq 1, length 64
+	0x0000:  921b 4050 323b 3a37 3f0b 36fc 0800 4500  ..@P2;:7?.6...E.
+	0x0010:  0054 71d8 4000 4001 b4cc 0a00 0001 0a00  .Tq.@.@.........
+	0x0020:  0004 0800 c004 1e38 0001 747c 3357 0000  .......8..t|3W..
+	0x0030:  0000 a51b 0e00 0000 0000 1011 1213 1415  ................
+	0x0040:  1617 1819 1a1b 1c1d 1e1f 2021 2223 2425  ...........!"#$%
+	0x0050:  2627 2829 2a2b 2c2d 2e2f 3031 3233 3435  &'()*+,-./012345
+	0x0060:  3637                                     67
+11:39:52.959904 IP (tos 0x0, ttl 64, id 29142, offset 0, flags [DF], proto ICMP (1), length 84)
+    10.0.0.2 > 10.0.0.4: ICMP echo request, id 7737, seq 1, length 64
+	0x0000:  921b 4050 323b 9a98 fcf5 4668 0800 4500  ..@P2;....Fh..E.
+	0x0010:  0054 71d6 4000 4001 b4cd 0a00 0002 0a00  .Tq.@.@.........
+	0x0020:  0004 0800 4c3b 1e39 0001 787c 3357 0000  ....L;.9..x|3W..
+	0x0030:  0000 16e4 0c00 0000 0000 1011 1213 1415  ................
+	0x0040:  1617 1819 1a1b 1c1d 1e1f 2021 2223 2425  ...........!"#$%
+	0x0050:  2627 2829 2a2b 2c2d 2e2f 3031 3233 3435  &'()*+,-./012345
+	0x0060:  3637                                     67
+
+
+Now we monitor traffic at switch s2 of the topology, at the interface connecting it to s1. There we should only observe the ECHO Replies of the pings
+
+mininet> s2 tcpdump -XX -n -i s2-eth3 -v icmp
+tcpdump: WARNING: s2-eth3: no IPv4 address assigned
+tcpdump: listening on s2-eth3, link-type EN10MB (Ethernet), capture size 65535 bytes
+11:41:53.657964 IP (tos 0x0, ttl 64, id 3242, offset 0, flags [none], proto ICMP (1), length 84)
+    10.0.0.4 > 10.0.0.1: ICMP echo reply, id 7768, seq 1, length 64
+	0x0000:  3a37 3f0b 36fc 921b 4050 323b 0800 4500  :7?.6...@P2;..E.
+	0x0010:  0054 0caa 0000 4001 59fb 0a00 0004 0a00  .T....@.Y.......
+	0x0020:  0001 0000 def6 1e58 0001 f17c 3357 0000  .......X...|3W..
+	0x0030:  0000 1509 0a00 0000 0000 1011 1213 1415  ................
+	0x0040:  1617 1819 1a1b 1c1d 1e1f 2021 2223 2425  ...........!"#$%
+	0x0050:  2627 2829 2a2b 2c2d 2e2f 3031 3233 3435  &'()*+,-./012345
+	0x0060:  3637                                     67
+11:41:55.569689 IP (tos 0x0, ttl 64, id 18801, offset 0, flags [none], proto ICMP (1), length 84)
+    10.0.0.4 > 10.0.0.2: ICMP echo reply, id 7769, seq 1, length 64
+	0x0000:  9a98 fcf5 4668 921b 4050 323b 0800 4500  ....Fh..@P2;..E.
+	0x0010:  0054 4971 0000 4001 1d33 0a00 0004 0a00  .TIq..@..3......
+	0x0020:  0002 0000 bb4e 1e59 0001 f37c 3357 0000  .....N.Y...|3W..
+	0x0030:  0000 38b0 0800 0000 0000 1011 1213 1415  ..8.............
+	0x0040:  1617 1819 1a1b 1c1d 1e1f 2021 2223 2425  ...........!"#$%
+	0x0050:  2627 2829 2a2b 2c2d 2e2f 3031 3233 3435  &'()*+,-./012345
+	0x0060:  3637                                     67
+
+
+As we see the policies are enforced from our controller and the traffic from H4 to H1 or H2 does NOT pass from switch 3.
+
+Furthermore, we will ping H3 from H1 and H2 and we will observe the same interfaces, so as to see that all ICMP requests/replies pass from s1 and s2, and not from s3.
+
+The monitoring at s3:
+
+mininet> s3 tcpdump -XX -n -i s3-eth2 -v icmp
+tcpdump: WARNING: s3-eth2: no IPv4 address assigned
+tcpdump: listening on s3-eth2, link-type EN10MB (Ethernet), capture size 65535 bytes
+
+As we can see no packet pass from s3.
+
+Now we monitor s2 interface that connects switch 2 to switch 1 and there we should observe all the echo requests and replies.
+
+The monitoring at s2
+
+mininet> s2 tcpdump -XX -n -i s2-eth3 -v icmp
+tcpdump: WARNING: s2-eth3: no IPv4 address assigned
+tcpdump: listening on s2-eth3, link-type EN10MB (Ethernet), capture size 65535 bytes
+11:47:51.243053 IP (tos 0x0, ttl 64, id 23910, offset 0, flags [DF], proto ICMP (1), length 84)
+    10.0.0.1 > 10.0.0.3: ICMP echo request, id 7879, seq 1, length 64
+	0x0000:  96ca 3135 d8ba 3a37 3f0b 36fc 0800 4500  ..15..:7?.6...E.
+	0x0010:  0054 5d66 4000 4001 c93f 0a00 0001 0a00  .T]f@.@..?......
+	0x0020:  0003 0800 d6da 1ec7 0001 577e 3357 0000  ..........W~3W..
+	0x0030:  0000 b5b4 0300 0000 0000 1011 1213 1415  ................
+	0x0040:  1617 1819 1a1b 1c1d 1e1f 2021 2223 2425  ...........!"#$%
+	0x0050:  2627 2829 2a2b 2c2d 2e2f 3031 3233 3435  &'()*+,-./012345
+	0x0060:  3637                                     67
+11:47:51.243153 IP (tos 0x0, ttl 64, id 3240, offset 0, flags [none], proto ICMP (1), length 84)
+    10.0.0.3 > 10.0.0.1: ICMP echo reply, id 7879, seq 1, length 64
+	0x0000:  3a37 3f0b 36fc 96ca 3135 d8ba 0800 4500  :7?.6...15....E.
+	0x0010:  0054 0ca8 0000 4001 59fe 0a00 0003 0a00  .T....@.Y.......
+	0x0020:  0001 0000 deda 1ec7 0001 577e 3357 0000  ..........W~3W..
+	0x0030:  0000 b5b4 0300 0000 0000 1011 1213 1415  ................
+	0x0040:  1617 1819 1a1b 1c1d 1e1f 2021 2223 2425  ...........!"#$%
+	0x0050:  2627 2829 2a2b 2c2d 2e2f 3031 3233 3435  &'()*+,-./012345
+	0x0060:  3637                                     67
+11:47:53.594364 IP (tos 0x0, ttl 64, id 23910, offset 0, flags [DF], proto ICMP (1), length 84)
+    10.0.0.2 > 10.0.0.3: ICMP echo request, id 7880, seq 1, length 64
+	0x0000:  96ca 3135 d8ba 9a98 fcf5 4668 0800 4500  ..15......Fh..E.
+	0x0010:  0054 5d66 4000 4001 c93e 0a00 0002 0a00  .T]f@.@..>......
+	0x0020:  0003 0800 777d 1ec8 0001 597e 3357 0000  ....w}....Y~3W..
+	0x0030:  0000 0d11 0900 0000 0000 1011 1213 1415  ................
+	0x0040:  1617 1819 1a1b 1c1d 1e1f 2021 2223 2425  ...........!"#$%
+	0x0050:  2627 2829 2a2b 2c2d 2e2f 3031 3233 3435  &'()*+,-./012345
+	0x0060:  3637                                     67
+11:47:53.594455 IP (tos 0x0, ttl 64, id 18801, offset 0, flags [none], proto ICMP (1), length 84)
+    10.0.0.3 > 10.0.0.2: ICMP echo reply, id 7880, seq 1, length 64
+	0x0000:  9a98 fcf5 4668 96ca 3135 d8ba 0800 4500  ....Fh..15....E.
+	0x0010:  0054 4971 0000 4001 1d34 0a00 0003 0a00  .TIq..@..4......
+	0x0020:  0002 0000 7f7d 1ec8 0001 597e 3357 0000  .....}....Y~3W..
+	0x0030:  0000 0d11 0900 0000 0000 1011 1213 1415  ................
+	0x0040:  1617 1819 1a1b 1c1d 1e1f 2021 2223 2425  ...........!"#$%
+	0x0050:  2627 2829 2a2b 2c2d 2e2f 3031 3233 3435  &'()*+,-./012345
+	0x0060:  3637                                     67
+
+
+We can see that all the traffic between H1 or H2 destined to H3 follows the shortest path in the topology.
+
+Finally, we perform the pingall command in mininet and dump all the flows of the switches, we grep the command so as to
+observe only flows relevant with ip traffic, on which we enforce the policies :
+
+mininet> dpctl dump-flows | grep ip
+*** s1 ------------------------------------------------------------------------
+ cookie=0x0, duration=63.462s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=2,nw_src=10.0.0.2,nw_dst=10.0.0.4 actions=output:4
+ cookie=0x0, duration=63.857s, table=0, n_packets=2, n_bytes=196, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=3,nw_src=10.0.0.3,nw_dst=10.0.0.1 actions=output:1
+ cookie=0x0, duration=64.06s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=1,nw_src=10.0.0.1,nw_dst=10.0.0.2 actions=output:2
+ cookie=0x0, duration=63.886s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=1,nw_src=10.0.0.1,nw_dst=10.0.0.3 actions=output:3
+ cookie=0x0, duration=63.751s, table=0, n_packets=2, n_bytes=196, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=3,nw_src=10.0.0.4,nw_dst=10.0.0.1 actions=output:1
+ cookie=0x0, duration=63.431s, table=0, n_packets=2, n_bytes=196, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=3,nw_src=10.0.0.4,nw_dst=10.0.0.2 actions=output:2
+ cookie=0x0, duration=63.993s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=2,nw_src=10.0.0.2,nw_dst=10.0.0.1 actions=output:1
+ cookie=0x0, duration=63.754s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=1,nw_src=10.0.0.1,nw_dst=10.0.0.4 actions=output:4
+ cookie=0x0, duration=63.574s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=2,nw_src=10.0.0.2,nw_dst=10.0.0.3 actions=output:3
+ cookie=0x0, duration=63.543s, table=0, n_packets=2, n_bytes=196, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=3,nw_src=10.0.0.3,nw_dst=10.0.0.2 actions=output:2
+ cookie=0x0, duration=90.567s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=90, priority=1,ipv6,in_port=2,dl_src=c2:79:bd:0b:f3:12,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=88.052s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=88, priority=1,ipv6,in_port=3,dl_src=7e:81:3a:27:80:63,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=86.567s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=86, priority=1,ipv6,in_port=4,dl_src=ca:bb:41:aa:5d:dc,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=86.567s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=86, priority=1,ipv6,in_port=4,dl_src=c2:79:bd:0b:f3:12,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=86.53s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=86, priority=1,ipv6,in_port=4,dl_src=92:d6:f2:9d:cd:68,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=82.044s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=82, priority=1,ipv6,in_port=3,dl_src=ca:bb:41:aa:5d:dc,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=88.096s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=88, priority=1,ipv6,in_port=3,dl_src=c2:79:bd:0b:f3:12,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=82.045s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=82, priority=1,ipv6,in_port=1,dl_src=92:d6:f2:9d:cd:68,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=88.052s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=88, priority=1,ipv6,in_port=3,dl_src=92:d6:f2:9d:cd:68,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=86.567s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=86, priority=1,ipv6,in_port=4,dl_src=7e:81:3a:27:80:63,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+*** s2 ------------------------------------------------------------------------
+ cookie=0x0, duration=63.33s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=1,nw_src=10.0.0.3,nw_dst=10.0.0.4 actions=output:2
+ cookie=0x0, duration=63.76s, table=0, n_packets=2, n_bytes=196, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=4,nw_src=10.0.0.1,nw_dst=10.0.0.4 actions=output:2
+ cookie=0x0, duration=63.758s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=2,nw_src=10.0.0.4,nw_dst=10.0.0.1 actions=output:3
+ cookie=0x0, duration=63.896s, table=0, n_packets=2, n_bytes=196, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=3,nw_src=10.0.0.1,nw_dst=10.0.0.3 actions=output:1
+ cookie=0x0, duration=63.863s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=1,nw_src=10.0.0.3,nw_dst=10.0.0.1 actions=output:3
+ cookie=0x0, duration=63.437s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=2,nw_src=10.0.0.4,nw_dst=10.0.0.2 actions=output:3
+ cookie=0x0, duration=63.617s, table=0, n_packets=2, n_bytes=196, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=3,nw_src=10.0.0.2,nw_dst=10.0.0.3 actions=output:1
+ cookie=0x0, duration=63.263s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=2,nw_src=10.0.0.4,nw_dst=10.0.0.3 actions=output:1
+ cookie=0x0, duration=63.468s, table=0, n_packets=2, n_bytes=196, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=4,nw_src=10.0.0.2,nw_dst=10.0.0.4 actions=output:2
+ cookie=0x0, duration=63.55s, table=0, n_packets=1, n_bytes=98, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=1,nw_src=10.0.0.3,nw_dst=10.0.0.2 actions=output:3
+ cookie=0x0, duration=86.536s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=86, priority=1,ipv6,in_port=3,dl_src=7e:81:3a:27:80:63,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=88.063s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=88, priority=1,ipv6,in_port=4,dl_src=ca:bb:41:aa:5d:dc,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=88.111s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=88, priority=1,ipv6,in_port=4,dl_src=c2:79:bd:0b:f3:12,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=88.063s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=88, priority=1,ipv6,in_port=4,dl_src=92:d6:f2:9d:cd:68,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=86.536s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=86, priority=1,ipv6,in_port=3,dl_src=ca:bb:41:aa:5d:dc,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=90.658s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=90, priority=1,ipv6,in_port=2,dl_src=7e:81:3a:27:80:63,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=86.536s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=86, priority=1,ipv6,in_port=3,dl_src=c2:79:bd:0b:f3:12,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=82.052s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=82, priority=1,ipv6,in_port=1,dl_src=ca:bb:41:aa:5d:dc,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=82.012s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=82, priority=1,ipv6,in_port=3,dl_src=92:d6:f2:9d:cd:68,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=88.063s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=88, priority=1,ipv6,in_port=4,dl_src=7e:81:3a:27:80:63,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+*** s3 ------------------------------------------------------------------------
+ cookie=0x0, duration=63.798s, table=0, n_packets=2, n_bytes=196, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=1,nw_src=10.0.0.1,nw_dst=10.0.0.4 actions=output:2
+ cookie=0x0, duration=63.51s, table=0, n_packets=2, n_bytes=196, hard_timeout=1000, idle_age=63, priority=1000,ip,in_port=1,nw_src=10.0.0.2,nw_dst=10.0.0.4 actions=output:2
+ cookie=0x0, duration=86.617s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=86, priority=1,ipv6,in_port=2,dl_src=c2:79:bd:0b:f3:12,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=86.616s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=86, priority=1,ipv6,in_port=2,dl_src=ca:bb:41:aa:5d:dc,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=88.117s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=88, priority=1,ipv6,in_port=1,dl_src=7e:81:3a:27:80:63,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=86.616s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=86, priority=1,ipv6,in_port=2,dl_src=7e:81:3a:27:80:63,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=86.541s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=86, priority=1,ipv6,in_port=2,dl_src=92:d6:f2:9d:cd:68,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=88.117s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=88, priority=1,ipv6,in_port=1,dl_src=c2:79:bd:0b:f3:12,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=82.017s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=82, priority=1,ipv6,in_port=1,dl_src=ca:bb:41:aa:5d:dc,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+ cookie=0x0, duration=82.017s, table=0, n_packets=0, n_bytes=0, hard_timeout=200, idle_age=82, priority=1,ipv6,in_port=1,dl_src=92:d6:f2:9d:cd:68,dl_dst=ff:ff:ff:ff:ff:ff,nw_proto=0,nw_tos=0 actions=FLOOD
+
+We can clearly see that at switch s3 there exist rules that only forward IP traffic with src = [10.0.0.1, 10.0.0.2] to dst = 10.0.0.4 towards the port 2 of the switch, which 
+is connected to s2.
+

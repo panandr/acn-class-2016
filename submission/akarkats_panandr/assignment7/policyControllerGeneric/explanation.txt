@@ -1,0 +1,20 @@
+For this part we implemented a generic policy controller meaning that can accept any arbitrary policies for a specified topology.
+
+Policies are given in the file "policies.txt". Each policy contains the source and destination host IPs and one switch that the traffic has to go through. Input sanity is assumed.
+
+Our implementation enforces the policy for the IP Traffic between these hosts. Other kind of traffic (like ARP) are handles by the learning switch implementation of our microflow controller. 
+
+The code can work for different datapath-ids and different mac addresses of the hosts. The only thing that has to be configured are the host IPs. These can be easily configured in the mininet topology file.
+
+As far as the policy enforcement is concerned our controller checks the source and destination IP address of the first unknown packet and:
+- If the policy has to be enforced a path passing through the desired switch is chosen at random and the respective rules are installed on all the switches on the path.
+- Otherwise, if no policy has to be enforced the shortest path between the 2 hosts is chosen. Flow rules are also installed along that path.
+- Finally, if the policy has to be enforced, but no path exists that passes through the desired switch, the user is informed and a shortest path is chosen.
+
+In order to do our path operations, we represent our network as a graph using the networkX library for Python. We can then easily find shortest paths, or simple paths that go through
+
+In order to check that our policies are enforced between the hosts we will ping between various pairs of hosts while monitoring the intefaces at the switches with tcpdump, and also, we 
+will dump the flows of the switches for each ping.
+
+The results of the tcpdump commands and the dump-flow commands that prove that our policies are enforced are in the output.log.
+

@@ -1,0 +1,9 @@
+# This file contains the policies to be enforced by the controller
+# Policies are in the form :
+#
+# <source-IP> <destination-IP> <switch ID>
+#
+# ,where <switch ID> is the ID of the switch the traffic should pass through
+
+10.0.0.1 10.0.0.4 3
+10.0.0.2 10.0.0.4 3
