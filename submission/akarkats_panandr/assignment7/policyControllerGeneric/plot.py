@@ -10,7 +10,7 @@ with open('timeouts.txt', 'r') as f:
         perf1.append(line.split()[1])
         perf2.append(line.split()[2])
 
-plt.title("Policy Controller: Throughput for different flow paths.")
+plt.title(" Generic policy Controller: Throughput for different flow paths.")
 plt.xlabel("hard_timeout for rules (sec)")
 plt.ylabel("Throughput (Gbps)")
 
